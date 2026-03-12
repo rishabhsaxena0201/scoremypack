@@ -341,12 +341,35 @@ async function runOcr(dataUrl){
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  NUTRITION PARSER  v3
+//  NUTRITION PARSER  v4
 //  Handles: dot-leaders, two-column tables, per-serving scaling,
 //  kJ/kcal split lines, salt→sodium, OCR O→0 l→1 ll→11 corruptions,
 //  EU saturates, US Calories label, #kcal, <0.1 traces
 // ═══════════════════════════════════════════════════════════════════
+
+// Positional boundary detection — marks where the nutrition table ends.
+// Everything below this line is footnotes, allergen advice, manufacturer info, etc.
+// Pattern matches structural signals, not content keywords — robust across label types.
+const TABLE_END_RE=/^[\*†‡]|%\s*daily\s*value\s*\(?tells|footnote|manufactured\s*by|allergen\s*advice|contains:|best\s*before|net\s*weight|mfg\s*date|batch\s*no|for\s*queries|customer\s*care|disclaimer|^\s*note\s*:/i;
+
+// Truncate raw OCR text to only the nutrition table — called once before any parsing.
+// Finds the first line that signals "footnote section starts" and discards everything after it.
+function truncateToTable(raw){
+  const lines=raw.split('\n');
+  const cutAt=lines.findIndex(l=>TABLE_END_RE.test(l.trim()));
+  return(cutAt===-1?lines:lines.slice(0,cutAt)).join('\n');
+}
+
 function cleanOcr(raw){
+  // FIX 2: strip % Daily Value column — strip trailing "NN%" AND bare trailing integers
+  // that look like DV% (1–100) after a unit like g/mg
+  const stripDvCol=line=>{
+    // Remove explicit "NN%" patterns
+    let l=line.replace(/\s+\d{1,3}\s*%/g,'');
+    // Also strip a bare trailing integer 1–100 that follows a unit token (g/mg/mcg/iu)
+    l=l.replace(/(\b(?:mg|mcg|iu|g)\b)\s+(\d{1,3})$/i,'$1');
+    return l;
+  };
   return raw.replace(/\r\n|\r/g,'\n')
     // dot/dash leaders (3+ chars)
     .replace(/([.\-_\u2022]{3,})/g,' ')
@@ -361,8 +384,10 @@ function cleanOcr(raw){
     .replace(/\bKJ\b/gi,'kJ').replace(/\bMG\b/g,'mg')
     // trace values
     .replace(/<\s*0[.,]\d+/g,'0').replace(/<\s*(\d)/g,'$1')
-    // percent columns
-    .replace(/\s+\d+\s*%/g,'').replace(/[*†‡]/g,'')
+    // percent columns (existing)
+    .replace(/[*†‡]/g,'')
+    // apply DV column strip per line
+    .split('\n').map(stripDvCol).join('\n')
     .replace(/[ \t]+/g,' ').trim();
 }
 function nums(str){return(str.match(/\d+(?:[.,]\d+)?/g)||[]).map(n=>parseFloat(n.replace(',','.'))).filter(n=>isFinite(n)&&n>=0);}
@@ -380,7 +405,8 @@ function pickVal(n,ts,maxVal=9999){
   if(ts)return s[Math.min(ts.col100g,s.length-1)];return s[s.length-1];
 }
 function parseNutrition(rawText){
-  const text=cleanOcr(rawText);
+  // Truncate to table boundary first — eliminates footnotes before any regex runs
+  const text=cleanOcr(truncateToTable(rawText));
   const lines=text.split('\n').map(l=>l.trim()).filter(Boolean);
   const struct=detectStruct(lines);
   // get(): uses current line nums only; falls to next line only if current has none
@@ -443,10 +469,15 @@ function parseNutrition(rawText){
   if(sodium_mg===null){const salt_g=get([/\bsalt\b/i]);if(salt_g!==null)sodium_mg=+(salt_g/2.5*1000).toFixed(1);}
   let serving_size_g=null;
   const sHit=matchLines(lines,/serving\s*size|per\s*serving|serving\s*per/i)[0];
-  if(sHit){const m=(sHit.line+' '+sHit.next).match(/(\d[\d.]*)\s*g\b/i);if(m)serving_size_g=parseFloat(m[1]);}
+  if(sHit){
+    const combined=sHit.line+' '+sHit.next;
+    const m=combined.match(/\((\d+(?:\.\d+)?)\s*g\s*\)/i)||combined.match(/\b(\d+(?:\.\d+)?)\s*g\b/i);
+    if(m)serving_size_g=parseFloat(m[1]);
+  }
   let scale=1;
-  if(!struct&&serving_size_g&&serving_size_g<100&&energy_kcal!==null){
-    const exp100=energy_kcal*(100/serving_size_g);if(energy_kcal<200&&exp100<=1000)scale=100/serving_size_g;
+  if(!struct&&serving_size_g&&serving_size_g>0&&serving_size_g<95&&energy_kcal!==null){
+    const exp100=energy_kcal*(100/serving_size_g);
+    if(exp100>=50&&exp100<=1500)scale=100/serving_size_g;
   }
   const sc=v=>v!==null?+(v*scale).toFixed(1):null;
   return{energy_kcal:sc(energy_kcal),energy_kj:sc(energy_kj),fat_g:sc(fat_g),saturated_fat_g:sc(saturated_fat_g),carbs_g:sc(carbs_g),sugar_g:sc(sugar_g),fibre_g:sc(fibre_g),protein_g:sc(protein_g),sodium_mg:sc(sodium_mg),serving_size_g};
