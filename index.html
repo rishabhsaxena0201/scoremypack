@@ -753,29 +753,113 @@ function showError(msg){document.getElementById('error-msg').textContent=msg;doc
 // ═══════════════════════════════════════════════════════════════════
 //  REVIEW CARD
 // ═══════════════════════════════════════════════════════════════════
+
+// Standard fields — shown for every scan
 const FIELDS=[
-  {key:'energy_kcal',   label:'Energy',          unit:'kcal', step:'1'},
-  {key:'fat_g',         label:'Total Fat',        unit:'g',    step:'.1'},
-  {key:'saturated_fat_g',label:'Saturated Fat',   unit:'g',    step:'.1'},
-  {key:'carbs_g',       label:'Carbohydrates',    unit:'g',    step:'.1'},
-  {key:'sugar_g',       label:'Total Sugar',      unit:'g',    step:'.1'},
-  {key:'fibre_g',       label:'Dietary Fibre',    unit:'g',    step:'.1'},
-  {key:'protein_g',     label:'Protein',          unit:'g',    step:'.1'},
-  {key:'sodium_mg',     label:'Sodium',           unit:'mg',   step:'1'},
+  {key:'fat_g',          label:'Total Fat',      unit:'g',   step:'.1'},
+  {key:'saturated_fat_g',label:'Saturated Fat',  unit:'g',   step:'.1'},
+  {key:'carbs_g',        label:'Carbohydrates',  unit:'g',   step:'.1'},
+  {key:'sugar_g',        label:'Total Sugar',    unit:'g',   step:'.1'},
+  {key:'fibre_g',        label:'Dietary Fibre',  unit:'g',   step:'.1'},
+  {key:'protein_g',      label:'Protein',        unit:'g',   step:'.1'},
 ];
 const SCORE_KEYS=new Set(['energy_kcal','saturated_fat_g','sugar_g','sodium_mg','fibre_g','protein_g']);
+
+// Build the energy block HTML — shows kcal + kJ, user fills whichever label shows
+function energyBlockHtml(nutrition){
+  const kcal=nutrition.energy_kcal,kj=nutrition.energy_kj;
+  const missKcal=kcal===null,missKj=kj===null;
+  const bothMissing=missKcal&&missKj;
+  return `<div class="field-group">
+    <div class="field-label">
+      <span class="f-dot ${bothMissing?'f-miss':'f-ok'}"></span>
+      Energy <span style="color:var(--border);font-size:10px">(per 100g — enter whichever your label shows)</span>
+    </div>
+    <div class="field-row" style="gap:8px">
+      <input class="field-input${missKcal&&missKj?' f-missing':''}" type="number" id="f-energy_kcal"
+        placeholder="kcal" value="${kcal!==null?kcal:''}" step="1" min="0" inputmode="decimal"
+        style="flex:1" oninput="onEnergyInput('kcal')">
+      <span class="field-unit" style="min-width:28px">kcal</span>
+      <span style="color:var(--border);align-self:center;font-size:11px">or</span>
+      <input class="field-input${missKcal&&missKj?' f-missing':''}" type="number" id="f-energy_kj"
+        placeholder="kJ" value="${kj!==null?kj:''}" step="1" min="0" inputmode="decimal"
+        style="flex:1" oninput="onEnergyInput('kj')">
+      <span class="field-unit" style="min-width:16px">kJ</span>
+    </div>
+  </div>`;
+}
+
+// Build the sodium/salt block HTML — user fills whichever label shows
+function sodiumBlockHtml(nutrition){
+  const sodium=nutrition.sodium_mg;
+  // Try to detect if parser got sodium from salt conversion (value exists but no sodium keyword)
+  const hasSodium=sodium!==null;
+  return `<div class="field-group">
+    <div class="field-label">
+      <span class="f-dot ${hasSodium?'f-ok':'f-miss'}"></span>
+      Sodium / Salt <span style="color:var(--border);font-size:10px">(per 100g — enter whichever your label shows)</span>
+    </div>
+    <div class="field-row" style="gap:8px">
+      <input class="field-input${!hasSodium?' f-missing':''}" type="number" id="f-sodium_mg"
+        placeholder="Sodium mg" value="${hasSodium?sodium:''}" step="1" min="0" inputmode="decimal"
+        style="flex:1" oninput="onSodiumInput('sodium')">
+      <span class="field-unit" style="min-width:16px">mg</span>
+      <span style="color:var(--border);align-self:center;font-size:11px">or</span>
+      <input class="field-input${!hasSodium?' f-missing':''}" type="number" id="f-salt_g"
+        placeholder="Salt g" value="" step=".01" min="0" inputmode="decimal"
+        style="flex:1" oninput="onSodiumInput('salt')">
+      <span class="field-unit" style="min-width:16px">g</span>
+    </div>
+    <div style="font-size:10px;color:var(--border);margin-top:4px;padding-left:16px">
+      Salt ÷ 2.5 × 1000 = Sodium mg &nbsp;·&nbsp; e.g. Salt 1g = Sodium 400mg
+    </div>
+  </div>`;
+}
+
+// Auto-convert energy inputs as user types
+function onEnergyInput(changed){
+  const kcalEl=document.getElementById('f-energy_kcal');
+  const kjEl=document.getElementById('f-energy_kj');
+  if(changed==='kcal'&&kcalEl.value){
+    kjEl.value=+(parseFloat(kcalEl.value)*4.184).toFixed(0);
+  } else if(changed==='kj'&&kjEl.value){
+    kcalEl.value=+(parseFloat(kjEl.value)/4.184).toFixed(1);
+  }
+}
+
+// Auto-convert sodium/salt inputs as user types
+function onSodiumInput(changed){
+  const sodiumEl=document.getElementById('f-sodium_mg');
+  const saltEl=document.getElementById('f-salt_g');
+  if(changed==='sodium'&&sodiumEl.value){
+    saltEl.value=+(parseFloat(sodiumEl.value)/1000*2.5).toFixed(3);
+  } else if(changed==='salt'&&saltEl.value){
+    sodiumEl.value=+(parseFloat(saltEl.value)/2.5*1000).toFixed(1);
+  }
+}
+
 function showReviewCard(nutrition){
   const cf=confScore(nutrition);
   const badge=document.getElementById('ocr-conf');
   const pct=Math.round(cf.found/cf.total*100);
   badge.textContent=`${pct}% OCR`;
   badge.className='ocr-conf '+(pct>=80?'conf-hi':pct>=50?'conf-md':'conf-lo');
-  const missing=FIELDS.filter(f=>nutrition[f.key]===null&&SCORE_KEYS.has(f.key));
-  document.getElementById('review-note').textContent=missing.length?`⚠ ${missing.length} scoring field${missing.length>1?'s':''} not found: ${missing.map(f=>f.label).join(', ')}. Enter values or leave blank (treated as 0).`:'✓ All key scoring fields extracted. Verify before calculating.';
+  // Missing scoring fields — check energy and sodium specially
+  const missingLabels=[];
+  if(nutrition.energy_kcal===null&&nutrition.energy_kj===null)missingLabels.push('Energy');
+  if(nutrition.saturated_fat_g===null)missingLabels.push('Saturated Fat');
+  if(nutrition.sugar_g===null)missingLabels.push('Total Sugar');
+  if(nutrition.sodium_mg===null)missingLabels.push('Sodium/Salt');
+  if(nutrition.fibre_g===null)missingLabels.push('Dietary Fibre');
+  if(nutrition.protein_g===null)missingLabels.push('Protein');
+  document.getElementById('review-note').textContent=missingLabels.length
+    ?`⚠ ${missingLabels.length} scoring field${missingLabels.length>1?'s':''} not found: ${missingLabels.join(', ')}. Enter values or leave blank (treated as 0).`
+    :'✓ All key scoring fields extracted. Verify before calculating.';
   const cont=document.getElementById('review-fields');
-  cont.innerHTML=FIELDS.map((f,i)=>{
+  // Energy block at top, standard fields, sodium/salt block at bottom
+  const standardHtml=FIELDS.map((f,i)=>{
     const v=nutrition[f.key];const miss=v===null;
-    const div=i===5?'<div class="field-divider"></div>':'';
+    const div=i===4?'<div class="field-divider"></div>':'';
     return `${div}<div class="field-group">
       <div class="field-label"><span class="f-dot ${miss?'f-miss':'f-ok'}"></span>${f.label} <span style="color:var(--border);font-size:10px">(per 100g)</span></div>
       <div class="field-row">
@@ -786,13 +870,40 @@ function showReviewCard(nutrition){
       </div>
     </div>`;
   }).join('');
+  cont.innerHTML=energyBlockHtml(nutrition)+standardHtml+'<div class="field-divider"></div>'+sodiumBlockHtml(nutrition);
   document.getElementById('review-card').classList.add('active');
   document.getElementById('review-card').scrollIntoView({behavior:'smooth',block:'start'});
 }
+
 function calculateFromForm(){
   const n={};
-  for(const f of FIELDS){const v=document.getElementById('f-'+f.key).value.trim();n[f.key]=v===''?null:parseFloat(v);}
-  if(n.energy_kcal!==null)n.energy_kj=+(n.energy_kcal*4.184).toFixed(1);
+  // Energy — prefer kcal input, fall back to kJ conversion
+  const kcalVal=document.getElementById('f-energy_kcal').value.trim();
+  const kjVal=document.getElementById('f-energy_kj').value.trim();
+  if(kcalVal!==''){
+    n.energy_kcal=parseFloat(kcalVal);
+    n.energy_kj=+(n.energy_kcal*4.184).toFixed(1);
+  } else if(kjVal!==''){
+    n.energy_kj=parseFloat(kjVal);
+    n.energy_kcal=+(n.energy_kj/4.184).toFixed(1);
+  } else {
+    n.energy_kcal=null;n.energy_kj=null;
+  }
+  // Standard fields
+  for(const f of FIELDS){
+    const v=document.getElementById('f-'+f.key).value.trim();
+    n[f.key]=v===''?null:parseFloat(v);
+  }
+  // Sodium — prefer sodium input, fall back to salt conversion
+  const sodiumVal=document.getElementById('f-sodium_mg').value.trim();
+  const saltVal=document.getElementById('f-salt_g').value.trim();
+  if(sodiumVal!==''){
+    n.sodium_mg=parseFloat(sodiumVal);
+  } else if(saltVal!==''){
+    n.sodium_mg=+(parseFloat(saltVal)/2.5*1000).toFixed(1);
+  } else {
+    n.sodium_mg=null;
+  }
   const sc=calcScore(n);
   const{verdict,strengths,concerns}=genVerdict(n,sc);
   document.getElementById('review-card').classList.remove('active');
