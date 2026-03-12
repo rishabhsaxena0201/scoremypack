@@ -678,11 +678,36 @@ function parseNutrition(rawText){
     }
     return null;
   })();
-  const fibre_g=get([/dietary\s*fi[b]?[re]+/i,/\bfi[b]?[re]+[s]?\b/i]);
-  const protein_g=get([/\bprotein[s]?\b/i]);
-  let sodium_mg=get([/\bsodium\b/i],10000);
+  // Fibre: max 30g — picks FIRST value ≤30 (fibre appears before salt on merged lines)
+  const fibre_g=(()=>{
+    for(const re of[/dietary\s*fi[b]?[re]+/i,/\bfi[b]?[re]+[s]?\b/i]){
+      const hits=matchLines(lines,re);
+      for(const hit of hits){
+        const n=nums(hit.line).filter(v=>v<=30);
+        if(n.length)return n[0];
+        const n2=nums(hit.next).filter(v=>v<=30);
+        if(n2.length)return n2[0];
+      }
+    }
+    return null;
+  })();
+  const protein_g=get([/\bprotein[s]?\b/i],100);
+  // Sodium: max 5000mg
+  let sodium_mg=get([/\bsodium\b/i],5000);
   if(sodium_mg!==null&&sodium_mg>0&&sodium_mg<5)sodium_mg=+(sodium_mg*1000).toFixed(1);
-  if(sodium_mg===null){const salt_g=get([/\bsalt\b/i]);if(salt_g!==null)sodium_mg=+(salt_g/2.5*1000).toFixed(1);}
+  // Salt fallback: max 10g — picks LAST value ≤10 (salt appears after fibre on merged lines)
+  if(sodium_mg===null){
+    for(const re of[/\bsalt\b/i]){
+      const hits=matchLines(lines,re);
+      for(const hit of hits){
+        const n=nums(hit.line).filter(v=>v<=10);
+        if(n.length){sodium_mg=+(n[n.length-1]/2.5*1000).toFixed(1);break;}
+        const n2=nums(hit.next).filter(v=>v<=10);
+        if(n2.length){sodium_mg=+(n2[n2.length-1]/2.5*1000).toFixed(1);break;}
+      }
+      if(sodium_mg!==null)break;
+    }
+  }
   let serving_size_g=null;
   const sHit=matchLines(lines,/serving\s*size|per\s*serving|serving\s*per/i)[0];
   if(sHit){
