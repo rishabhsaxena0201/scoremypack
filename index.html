@@ -11,6 +11,16 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <title>ScoreMyPack</title>
+<!-- PostHog Analytics -->
+<script>
+!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]);t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+" (stub)"},o="capture identify alias people.set people.set_once set_config register register_once unregister opt_out_capturing has_opted_out_capturing opt_in_capturing reset isFeatureEnabled onFeatureFlags getFeatureFlag getFeatureFlagPayload reloadFeatureFlags group updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures getActiveMatchingSurveys getSurveys onSessionId".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+posthog.init('phc_pV141cAwQHLesHjKjr21zJ5jdSgyYG2OwBk8vEjazhU', {
+  api_host: 'https://us.i.posthog.com',
+  autocapture: false,
+  capture_pageview: true,
+  persistence: 'localStorage+cookie'
+});
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -279,6 +289,7 @@ let imgDataUrl=null;
 function openCamera(){document.getElementById('camera-input').click();}
 async function handleImage(input){
   const file=input.files[0];if(!file)return;
+  ph('image_uploaded',{file_size_kb:Math.round(file.size/1024)});
   const notice=document.getElementById('compress-notice');
   if(file.size>3*1024*1024)notice.classList.add('active');
   try{
@@ -898,6 +909,20 @@ function showReviewCard(nutrition){
   cont.innerHTML=energyBlockHtml(nutrition)+standardHtml+'<div class="field-divider"></div>'+sodiumBlockHtml(nutrition);
   document.getElementById('review-card').classList.add('active');
   document.getElementById('review-card').scrollIntoView({behavior:'smooth',block:'start'});
+  // Store parsed nutrition for field edit tracking
+  _reviewNutrition=nutrition;
+  const cf2=confScore(nutrition);
+  ph('review_shown',{
+    fields_found: cf2.found,
+    fields_missing: cf2.total - cf2.found,
+    ocr_pct: Math.round(cf2.found/cf2.total*100)
+  });
+  // Attach edit listeners to all review inputs
+  document.querySelectorAll('.field-input').forEach(inp=>{
+    inp.addEventListener('change',function(){
+      trackFieldEdit(this.id.replace('f-',''), this.value, this.dataset.wasEmpty==='true');
+    },{once:true});
+  });
 }
 
 function calculateFromForm(){
@@ -936,6 +961,22 @@ function calculateFromForm(){
 }
 
 // ═══════════════════════════════════════════════════════════════════
+//  ANALYTICS HELPERS
+// ═══════════════════════════════════════════════════════════════════
+function ph(event, props){
+  try{ window.posthog && posthog.capture(event, props||{}); }catch(e){}
+}
+// Track which fields user manually edits in the review form
+let _reviewNutrition=null; // nutrition as parsed by OCR
+function trackFieldEdit(fieldKey, newVal, wasEmpty){
+  ph('field_corrected',{
+    field: fieldKey,
+    was_empty: wasEmpty,
+    ocr_score: _reviewNutrition ? confScore(_reviewNutrition).found : null
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════
 //  MAIN FLOW
 // ═══════════════════════════════════════════════════════════════════
 async function analyseImage(){
@@ -950,6 +991,7 @@ async function analyseImage(){
   try{
     setProgress(10,'Finding nutrition table…','Detecting label region');
     const ocrText=await runOcr(imgDataUrl);
+    ph('ocr_complete');
     setProgress(70,'Parsing values…','Extracting nutrition data');
     const nutrition=parseNutrition(ocrText);
     setProgress(100,'Done!','');
@@ -961,6 +1003,12 @@ async function analyseImage(){
   }
 }
 function showResult(r){
+  ph('grade_calculated',{
+    grade: r.grade,
+    final_score: r.final_score,
+    negative_points: r.negative_points.total,
+    positive_points: r.positive_points.total
+  });
   const p=r.per100g;
   document.getElementById('result-name').textContent='Analysed Product';
   const badge=document.getElementById('grade-badge');badge.textContent=r.grade;badge.className='grade-badge grade-'+r.grade;
