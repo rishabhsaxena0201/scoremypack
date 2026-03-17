@@ -73,7 +73,23 @@ main{flex:1;padding:24px 20px;display:flex;flex-direction:column;gap:20px}
 .processing-sub{font-size:12px;color:var(--muted)}
 .progress-bar{width:100%;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
 .progress-fill{height:100%;background:var(--accent-bright);border-radius:2px;width:0%;transition:width .4s ease}
-/* Review card */
+/* ── Shared ── */
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+#camera-input,#upload-input{display:none}
+footer{padding:16px 20px;text-align:center;font-size:11px;color:var(--border);border-top:1px solid var(--border)}
+.compress-notice{background:rgba(20,100,180,.08);border:1px solid rgba(20,100,180,.2);border-radius:10px;padding:10px 14px;font-size:11px;color:var(--muted);align-items:center;gap:8px;display:none}
+.compress-notice.active{display:flex}
+.compress-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-bright);flex-shrink:0;animation:pulse 1.5s ease-in-out infinite}
+.error-card{background:rgba(230,62,17,.08);border:1px solid rgba(230,62,17,.25);border-radius:16px;padding:20px;display:none;text-align:center;gap:10px;flex-direction:column;align-items:center}
+.error-card.active{display:flex}
+.error-title{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:#FF6B6B}
+.error-msg{font-size:13px;color:var(--muted);line-height:1.5}
+.rescan-btn{width:calc(100% - 40px);margin:0 20px 20px;padding:13px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;display:none}
+.rescan-btn.active{display:block}
+.rescan-btn:active{background:var(--surface2)}
+
+/* ── Review card ── */
 .review-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden;display:none;animation:slideUp .35s ease}
 .review-card.active{display:block}
 .review-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
@@ -83,28 +99,39 @@ main{flex:1;padding:24px 20px;display:flex;flex-direction:column;gap:20px}
 .conf-hi{background:rgba(3,129,65,.15);color:#4ec97b;border:1px solid rgba(3,129,65,.3)}
 .conf-md{background:rgba(254,203,2,.12);color:#c9a000;border:1px solid rgba(254,203,2,.3)}
 .conf-lo{background:rgba(230,62,17,.12);color:#ff7755;border:1px solid rgba(230,62,17,.25)}
-.review-fields{padding:14px 20px 0;display:flex;flex-direction:column;gap:0}
-.field-group{margin-bottom:8px}
-.field-label{font-size:11px;color:var(--muted);letter-spacing:.3px;margin-bottom:4px;display:flex;align-items:center;gap:5px}
+/* Portion size row */
+.portion-row{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid var(--border);background:var(--surface2)}
+.portion-label{font-size:12px;color:var(--muted);flex:1}
+.portion-input{width:72px;background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:7px 10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;outline:none;text-align:center;-webkit-appearance:none;appearance:none}
+.portion-unit{font-size:12px;color:var(--muted)}
+.portion-same{font-size:10px;color:var(--muted);font-style:italic}
+/* Two-column table */
+.field-table{width:100%;padding:0 20px;margin-top:4px}
+.field-table-head{display:grid;grid-template-columns:1fr 90px 90px;gap:4px;padding:8px 0 6px;border-bottom:1px solid var(--border);margin-bottom:2px}
+.col-head{font-size:10px;color:var(--muted);text-align:center;letter-spacing:.3px}
+.col-head.col-name{text-align:left;padding-left:2px}
+.field-row-2col{display:grid;grid-template-columns:1fr 90px 90px;gap:4px;align-items:center;padding:5px 0;border-bottom:1px solid rgba(30,52,80,.5)}
+.field-row-2col:last-child{border-bottom:none}
+.field-name-cell{font-size:12px;color:var(--muted);padding-left:2px;display:flex;align-items:center;gap:5px}
 .f-dot{display:inline-block;width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.f-ok{background:#4ec97b}.f-warn{background:#FECB02}.f-miss{background:#E63E11}
-.field-row{display:flex;align-items:center;gap:8px}
-.field-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s;-webkit-appearance:none;appearance:none}
-.field-input:focus{border-color:var(--accent-bright)}
-.field-input.f-missing{border-color:rgba(230,62,17,.4);background:rgba(230,62,17,.04)}
-.field-input.f-missing:focus{border-color:var(--accent-bright);background:var(--surface2)}
-.field-unit{font-size:12px;color:var(--muted);min-width:30px}
-.field-divider{height:1px;background:var(--border);margin:8px 0 10px}
+.f-ok{background:#4ec97b}.f-miss{background:#E63E11}
+.field-cell{position:relative}
+.field-input-2{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 6px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;text-align:center;-webkit-appearance:none;appearance:none;transition:border-color .2s}
+.field-input-2:focus{border-color:var(--accent-bright)}
+.field-input-2.f-missing{border-color:rgba(230,62,17,.4);background:rgba(230,62,17,.04)}
+.field-input-2.f-missing:focus{border-color:var(--accent-bright);background:var(--surface2)}
+.field-unit-sm{font-size:9px;color:var(--border);display:block;text-align:center;margin-top:1px}
+.field-divider{height:1px;background:var(--border);margin:4px 0}
 .review-actions{padding:12px 20px 20px;display:flex;flex-direction:column;gap:10px}
+.review-note{font-size:11px;color:var(--muted);text-align:center;line-height:1.5;padding:0 4px}
 .btn-calc{width:100%;padding:14px;border-radius:13px;border:none;background:linear-gradient(135deg,#1464B4,#2E8AE6);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:15px;cursor:pointer;box-shadow:0 4px 16px rgba(20,100,180,.3);transition:all .2s;letter-spacing:.3px}
 .btn-calc:active{transform:scale(.98)}
 .btn-rescan-sm{width:100%;padding:11px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s}
 .btn-rescan-sm:active{background:var(--surface2)}
-.review-note{font-size:11px;color:var(--muted);text-align:center;line-height:1.5;padding:0 4px}
-/* Result */
+
+/* ── Result card ── */
 .result-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden;display:none;animation:slideUp .4s ease}
 .result-card.active{display:block}
-@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 .result-header{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
 .product-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
 .product-name{font-family:'Syne',sans-serif;font-weight:700;font-size:16px}
@@ -118,16 +145,21 @@ main{flex:1;padding:24px 20px;display:flex;flex-direction:column;gap:20px}
 .grade-pill{flex:1;padding:8px 4px;border-radius:8px;text-align:center;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;opacity:.25;transition:all .3s;color:#fff}
 .grade-pill.active{opacity:1;transform:scale(1.08)}
 .pill-A{background:var(--grade-a)}.pill-B{background:var(--grade-b)}.pill-C{background:var(--grade-c);color:#1a1a1a}.pill-D{background:var(--grade-d)}.pill-E{background:var(--grade-e)}
+/* Two-column nutrient table in result */
 .nutrients-section{padding:16px 20px;border-bottom:1px solid var(--border)}
-.section-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px}
-.nutrient-grid{display:flex;flex-direction:column;gap:10px}
-.nutrient-row{display:flex;align-items:center;gap:10px}
-.nutrient-name{font-size:13px;color:var(--muted);width:110px;flex-shrink:0}
-.nutrient-bar-wrap{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.section-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px}
+.nutrient-table-head{display:grid;grid-template-columns:100px 1fr 64px 64px;gap:6px;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:6px}
+.nt-col-head{font-size:10px;color:var(--muted);letter-spacing:.3px}
+.nt-col-head.right{text-align:right}
+.nutrient-row-2{display:grid;grid-template-columns:100px 1fr 64px 64px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(30,52,80,.4)}
+.nutrient-row-2:last-child{border-bottom:none}
+.nutrient-name{font-size:12px;color:var(--muted);line-height:1.3}
+.nutrient-bar-wrap{height:5px;background:var(--border);border-radius:3px;overflow:hidden;align-self:center}
 .nutrient-bar-fill{height:100%;border-radius:3px;transition:width .8s ease}
 .fill-bad{background:linear-gradient(90deg,#B44020,#E63E11)}
 .fill-good{background:linear-gradient(90deg,#2E8AE6,#1464B4)}
-.nutrient-val{font-size:12px;color:var(--text);width:52px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+.nutrient-val{font-size:12px;color:var(--text);text-align:right;font-variant-numeric:tabular-nums}
+.nutrient-val.muted{color:var(--muted)}
 .score-section{padding:16px 20px;border-bottom:1px solid var(--border)}
 .score-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0}
 .score-label{font-size:13px;color:var(--muted)}
@@ -141,19 +173,6 @@ main{flex:1;padding:24px 20px;display:flex;flex-direction:column;gap:20px}
 .tip{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--muted);line-height:1.5}
 .tip-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:5px}
 .tip-green{background:var(--accent-bright)}.tip-orange{background:#B44020}
-.rescan-btn{width:calc(100% - 40px);margin:0 20px 20px;padding:13px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s;display:none}
-.rescan-btn.active{display:block}
-.rescan-btn:active{background:var(--surface2)}
-.error-card{background:rgba(230,62,17,.08);border:1px solid rgba(230,62,17,.25);border-radius:16px;padding:20px;display:none;text-align:center;gap:10px;flex-direction:column;align-items:center}
-.error-card.active{display:flex}
-.error-title{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;color:#FF6B6B}
-.error-msg{font-size:13px;color:var(--muted);line-height:1.5}
-.compress-notice{background:rgba(20,100,180,.08);border:1px solid rgba(20,100,180,.2);border-radius:10px;padding:10px 14px;font-size:11px;color:var(--muted);align-items:center;gap:8px;display:none}
-.compress-notice.active{display:flex}
-.compress-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-bright);flex-shrink:0;animation:pulse 1.5s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
-#camera-input,#upload-input{display:none}
-footer{padding:16px 20px;text-align:center;font-size:11px;color:var(--border);border-top:1px solid var(--border)}
 </style>
 </head>
 <body>
@@ -211,12 +230,27 @@ footer{padding:16px 20px;text-align:center;font-size:11px;color:var(--border);bo
     <div class="review-card" id="review-card">
       <div class="review-header">
         <div>
-          <div class="review-title">Review Extracted Values</div>
-          <div class="review-sub">Check values before scoring. <span style="color:#E63E11">Red</span> = not found by OCR — enter manually or leave blank.</div>
+          <div class="review-title">Review Values</div>
+          <div class="review-sub"><span style="color:#E63E11">Red</span> = not found — enter from your pack. Edit either column.</div>
         </div>
         <div class="ocr-conf" id="ocr-conf">–</div>
       </div>
-      <div class="review-fields" id="review-fields"></div>
+      <!-- Editable portion size -->
+      <div class="portion-row">
+        <span class="portion-label">Portion size on pack</span>
+        <input class="portion-input" type="number" id="portion-size" min="1" max="500" step="1" inputmode="decimal" onchange="onPortionChange()" oninput="onPortionChange()">
+        <span class="portion-unit">g</span>
+        <span class="portion-same" id="portion-same-note"></span>
+      </div>
+      <!-- Two-column field table -->
+      <div class="field-table">
+        <div class="field-table-head">
+          <div class="col-head col-name">Nutrient</div>
+          <div class="col-head" id="col-head-serving">Per serving</div>
+          <div class="col-head">Per 100g</div>
+        </div>
+        <div id="review-fields"></div>
+      </div>
       <div class="review-actions">
         <div class="review-note" id="review-note"></div>
         <button class="btn-calc" onclick="calculateFromForm()">
@@ -247,8 +281,8 @@ footer{padding:16px 20px;text-align:center;font-size:11px;color:var(--border);bo
         <div class="grade-pill pill-E" id="pill-E">E</div>
       </div>
       <div class="nutrients-section">
-        <div class="section-title">Nutritional Values (per 100g)</div>
-        <div class="nutrient-grid" id="nutrient-grid"></div>
+        <div class="section-title" id="result-section-title">Nutritional Values</div>
+        <div id="nutrient-grid"></div>
       </div>
       <div class="score-section">
         <div class="section-title">Score Breakdown</div>
@@ -803,100 +837,210 @@ function hideAll(){['result-card','error-card','review-card','rescan-btn'].forEa
 function showError(msg){document.getElementById('error-msg').textContent=msg;document.getElementById('error-card').classList.add('active');document.getElementById('rescan-btn').classList.add('active');}
 
 // ═══════════════════════════════════════════════════════════════════
-//  REVIEW CARD
+//  REVIEW CARD  v2 — two-column (per-serving | per-100g), editable portion
 // ═══════════════════════════════════════════════════════════════════
 
-// Standard fields — shown for every scan
+// Field definitions — key, label, unit, max for validation
 const FIELDS=[
-  {key:'fat_g',          label:'Total Fat',      unit:'g',   step:'.1'},
-  {key:'saturated_fat_g',label:'Saturated Fat',  unit:'g',   step:'.1'},
-  {key:'carbs_g',        label:'Carbohydrates',  unit:'g',   step:'.1'},
-  {key:'sugar_g',        label:'Total Sugar',    unit:'g',   step:'.1'},
-  {key:'fibre_g',        label:'Dietary Fibre',  unit:'g',   step:'.1'},
-  {key:'protein_g',      label:'Protein',        unit:'g',   step:'.1'},
+  {key:'energy_kcal',    label:'Energy',        unit:'kcal', altKey:'energy_kj',    altUnit:'kJ',  altFactor:4.184, isEnergy:true},
+  {key:'fat_g',          label:'Total Fat',     unit:'g'},
+  {key:'saturated_fat_g',label:'Saturated Fat', unit:'g'},
+  {key:'carbs_g',        label:'Carbohydrates', unit:'g'},
+  {key:'sugar_g',        label:'Total Sugar',   unit:'g'},
+  {key:'fibre_g',        label:'Dietary Fibre', unit:'g'},
+  {key:'protein_g',      label:'Protein',       unit:'g'},
+  {key:'sodium_mg',      label:'Sodium',        unit:'mg',  altKey:'salt_g',       altUnit:'g',   altFactor:null, isSodium:true},
 ];
 const SCORE_KEYS=new Set(['energy_kcal','saturated_fat_g','sugar_g','sodium_mg','fibre_g','protein_g']);
 
-// Build the energy block HTML — shows kcal + kJ, user fills whichever label shows
-function energyBlockHtml(nutrition){
-  const kcal=nutrition.energy_kcal,kj=nutrition.energy_kj;
-  const missKcal=kcal===null,missKj=kj===null;
-  const bothMissing=missKcal&&missKj;
-  return `<div class="field-group">
-    <div class="field-label">
-      <span class="f-dot ${bothMissing?'f-miss':'f-ok'}"></span>
-      Energy <span style="color:var(--border);font-size:10px">(per 100g — enter whichever your label shows)</span>
-    </div>
-    <div class="field-row" style="gap:8px">
-      <input class="field-input${missKcal&&missKj?' f-missing':''}" type="number" id="f-energy_kcal"
-        placeholder="kcal" value="${kcal!==null?kcal:''}" step="1" min="0" inputmode="decimal"
-        style="flex:1" oninput="onEnergyInput('kcal')">
-      <span class="field-unit" style="min-width:28px">kcal</span>
-      <span style="color:var(--border);align-self:center;font-size:11px">or</span>
-      <input class="field-input${missKcal&&missKj?' f-missing':''}" type="number" id="f-energy_kj"
-        placeholder="kJ" value="${kj!==null?kj:''}" step="1" min="0" inputmode="decimal"
-        style="flex:1" oninput="onEnergyInput('kj')">
-      <span class="field-unit" style="min-width:16px">kJ</span>
-    </div>
-  </div>`;
+// State
+let _nutrition100g = {}; // per-100g values as parsed — source of truth
+let _portionG = 100;     // current portion size
+
+// ── Portion size change handler ───────────────────────────────────
+function onPortionChange(){
+  const el = document.getElementById('portion-size');
+  const v = parseFloat(el.value);
+  if(!v||v<=0||v>500) return;
+  _portionG = v;
+  // Update per-serving column from per-100g values
+  for(const f of FIELDS){
+    const v100 = _nutrition100g[f.key];
+    const servEl = document.getElementById('fs-'+f.key);
+    if(servEl && v100 !== null && v100 !== undefined){
+      servEl.value = +((v100 * _portionG / 100)).toFixed(f.unit==='mg'?1:2);
+    }
+    // Alt field (kJ or salt)
+    if(f.altKey){
+      const altEl = document.getElementById('fs-'+f.altKey);
+      if(altEl){
+        if(f.isEnergy){
+          const kj100 = _nutrition100g.energy_kj;
+          if(kj100!==null&&kj100!==undefined) altEl.value = +((kj100*_portionG/100)).toFixed(1);
+        } else if(f.isSodium){
+          const na100 = _nutrition100g.sodium_mg;
+          if(na100!==null&&na100!==undefined) altEl.value = +((na100/1000*2.5*_portionG/100)).toFixed(3);
+        }
+      }
+    }
+  }
+  updatePortionNote();
 }
 
-// Build the sodium/salt block HTML — user fills whichever label shows
-function sodiumBlockHtml(nutrition){
-  const sodium=nutrition.sodium_mg;
-  // Try to detect if parser got sodium from salt conversion (value exists but no sodium keyword)
-  const hasSodium=sodium!==null;
-  return `<div class="field-group">
-    <div class="field-label">
-      <span class="f-dot ${hasSodium?'f-ok':'f-miss'}"></span>
-      Sodium / Salt <span style="color:var(--border);font-size:10px">(per 100g — enter whichever your label shows)</span>
-    </div>
-    <div class="field-row" style="gap:8px">
-      <input class="field-input${!hasSodium?' f-missing':''}" type="number" id="f-sodium_mg"
-        placeholder="Sodium mg" value="${hasSodium?sodium:''}" step="1" min="0" inputmode="decimal"
-        style="flex:1" oninput="onSodiumInput('sodium')">
-      <span class="field-unit" style="min-width:16px">mg</span>
-      <span style="color:var(--border);align-self:center;font-size:11px">or</span>
-      <input class="field-input${!hasSodium?' f-missing':''}" type="number" id="f-salt_g"
-        placeholder="Salt g" value="" step=".01" min="0" inputmode="decimal"
-        style="flex:1" oninput="onSodiumInput('salt')">
-      <span class="field-unit" style="min-width:16px">g</span>
-    </div>
-    <div style="font-size:10px;color:var(--border);margin-top:4px;padding-left:16px">
-      Salt ÷ 2.5 × 1000 = Sodium mg &nbsp;·&nbsp; e.g. Salt 1g = Sodium 400mg
-    </div>
-  </div>`;
+function updatePortionNote(){
+  const note = document.getElementById('portion-same-note');
+  const head = document.getElementById('col-head-serving');
+  if(_portionG===100){
+    note.textContent='= 100g';
+    head.textContent='Per 100g';
+  } else {
+    note.textContent='';
+    head.textContent=`Per ${_portionG}g`;
+  }
 }
 
-// Auto-convert energy inputs as user types
+// ── Live sync: user edits serving → updates 100g, or 100g → serving ─
+function onServingInput(key){
+  const servEl = document.getElementById('fs-'+key);
+  const per100El = document.getElementById('f-'+key);
+  if(!servEl||!per100El) return;
+  const v = parseFloat(servEl.value);
+  if(!isNaN(v) && _portionG > 0){
+    const v100 = +(v * 100 / _portionG).toFixed(key==='sodium_mg'?1:2);
+    per100El.value = v100;
+    _nutrition100g[key] = v100;
+  }
+}
+
+function on100gInput(key){
+  const per100El = document.getElementById('f-'+key);
+  const servEl = document.getElementById('fs-'+key);
+  if(!per100El||!servEl) return;
+  const v = parseFloat(per100El.value);
+  if(!isNaN(v)){
+    _nutrition100g[key] = v;
+    servEl.value = +(v * _portionG / 100).toFixed(key==='sodium_mg'?1:2);
+  }
+}
+
+// Energy kJ ↔ kcal sync
 function onEnergyInput(changed){
   const kcalEl=document.getElementById('f-energy_kcal');
   const kjEl=document.getElementById('f-energy_kj');
-  if(changed==='kcal'&&kcalEl.value){
-    kjEl.value=+(parseFloat(kcalEl.value)*4.184).toFixed(0);
-  } else if(changed==='kj'&&kjEl.value){
-    kcalEl.value=+(parseFloat(kjEl.value)/4.184).toFixed(1);
+  const kcalSEl=document.getElementById('fs-energy_kcal');
+  const kjSEl=document.getElementById('fs-energy_kj');
+  if(changed==='kcal'&&kcalEl.value!==''){
+    const kcal=parseFloat(kcalEl.value);
+    if(!isNaN(kcal)){
+      kjEl.value=+(kcal*4.184).toFixed(0);
+      _nutrition100g.energy_kcal=kcal; _nutrition100g.energy_kj=+(kcal*4.184).toFixed(1);
+      if(kcalSEl) kcalSEl.value=+(kcal*_portionG/100).toFixed(1);
+      if(kjSEl)   kjSEl.value=+(kcal*4.184*_portionG/100).toFixed(0);
+    }
+  } else if(changed==='kj'&&kjEl.value!==''){
+    const kj=parseFloat(kjEl.value);
+    if(!isNaN(kj)){
+      kcalEl.value=+(kj/4.184).toFixed(1);
+      _nutrition100g.energy_kj=kj; _nutrition100g.energy_kcal=+(kj/4.184).toFixed(1);
+      if(kjSEl)   kjSEl.value=+(kj*_portionG/100).toFixed(0);
+      if(kcalSEl) kcalSEl.value=+(kj/4.184*_portionG/100).toFixed(1);
+    }
   }
 }
 
-// Auto-convert sodium/salt inputs as user types
+// Energy serving kcal ↔ kJ sync
+function onEnergyServInput(changed){
+  const kcalSEl=document.getElementById('fs-energy_kcal');
+  const kjSEl=document.getElementById('fs-energy_kj');
+  const kcalEl=document.getElementById('f-energy_kcal');
+  const kjEl=document.getElementById('f-energy_kj');
+  if(changed==='kcal'&&kcalSEl.value!==''){
+    const v=parseFloat(kcalSEl.value);
+    if(!isNaN(v)){
+      kjSEl.value=+(v*4.184).toFixed(0);
+      const v100=+(v*100/_portionG).toFixed(1);
+      kcalEl.value=v100; kjEl.value=+(v100*4.184).toFixed(0);
+      _nutrition100g.energy_kcal=v100; _nutrition100g.energy_kj=+(v100*4.184).toFixed(1);
+    }
+  } else if(changed==='kj'&&kjSEl.value!==''){
+    const v=parseFloat(kjSEl.value);
+    if(!isNaN(v)){
+      kcalSEl.value=+(v/4.184).toFixed(1);
+      const v100=+(v*100/_portionG/4.184).toFixed(1);
+      kcalEl.value=v100; kjEl.value=+(v100*4.184).toFixed(0);
+      _nutrition100g.energy_kcal=v100; _nutrition100g.energy_kj=+(v100*4.184).toFixed(1);
+    }
+  }
+}
+
+// Sodium ↔ Salt sync
 function onSodiumInput(changed){
-  const sodiumEl=document.getElementById('f-sodium_mg');
+  const naEl=document.getElementById('f-sodium_mg');
   const saltEl=document.getElementById('f-salt_g');
-  if(changed==='sodium'&&sodiumEl.value){
-    saltEl.value=+(parseFloat(sodiumEl.value)/1000*2.5).toFixed(3);
-  } else if(changed==='salt'&&saltEl.value){
-    sodiumEl.value=+(parseFloat(saltEl.value)/2.5*1000).toFixed(1);
+  const naSEl=document.getElementById('fs-sodium_mg');
+  const saltSEl=document.getElementById('fs-salt_g');
+  if(changed==='sodium'&&naEl.value!==''){
+    const v=parseFloat(naEl.value);
+    if(!isNaN(v)){
+      if(saltEl) saltEl.value=+(v/1000*2.5).toFixed(3);
+      _nutrition100g.sodium_mg=v;
+      if(naSEl)   naSEl.value=+(v*_portionG/100).toFixed(1);
+      if(saltSEl) saltSEl.value=+(v/1000*2.5*_portionG/100).toFixed(3);
+    }
+  } else if(changed==='salt'&&saltEl&&saltEl.value!==''){
+    const v=parseFloat(saltEl.value);
+    if(!isNaN(v)){
+      const na=+(v/2.5*1000).toFixed(1);
+      naEl.value=na;
+      _nutrition100g.sodium_mg=na;
+      if(naSEl)   naSEl.value=+(na*_portionG/100).toFixed(1);
+      if(saltSEl) saltSEl.value=+(v*_portionG/100).toFixed(3);
+    }
+  }
+}
+function onSodiumServInput(changed){
+  const naEl=document.getElementById('f-sodium_mg');
+  const saltEl=document.getElementById('f-salt_g');
+  const naSEl=document.getElementById('fs-sodium_mg');
+  const saltSEl=document.getElementById('fs-salt_g');
+  if(changed==='sodium'&&naSEl.value!==''){
+    const v=parseFloat(naSEl.value);
+    if(!isNaN(v)){
+      const na100=+(v*100/_portionG).toFixed(1);
+      naEl.value=na100; if(saltEl) saltEl.value=+(na100/1000*2.5).toFixed(3);
+      if(saltSEl) saltSEl.value=+(v/1000*2.5).toFixed(3);
+      _nutrition100g.sodium_mg=na100;
+    }
+  } else if(changed==='salt'&&saltSEl&&saltSEl.value!==''){
+    const v=parseFloat(saltSEl.value);
+    if(!isNaN(v)){
+      const na100=+(v/2.5*1000*100/_portionG).toFixed(1);
+      naEl.value=na100; if(saltEl) saltEl.value=+(na100/1000*2.5).toFixed(3);
+      if(naSEl) naSEl.value=+(na100*_portionG/100).toFixed(1);
+      _nutrition100g.sodium_mg=na100;
+    }
   }
 }
 
+// ── Build review form ─────────────────────────────────────────────
 function showReviewCard(nutrition){
+  // Store per-100g as source of truth
+  _nutrition100g = Object.assign({}, nutrition);
+  _portionG = nutrition.serving_size_g || 100;
+
+  // OCR confidence badge
   const cf=confScore(nutrition);
   const badge=document.getElementById('ocr-conf');
   const pct=Math.round(cf.found/cf.total*100);
   badge.textContent=`${pct}% OCR`;
   badge.className='ocr-conf '+(pct>=80?'conf-hi':pct>=50?'conf-md':'conf-lo');
-  // Missing scoring fields — check energy and sodium specially
+
+  // Portion size input
+  const portionEl = document.getElementById('portion-size');
+  portionEl.value = _portionG;
+  updatePortionNote();
+
+  // Missing fields note
   const missingLabels=[];
   if(nutrition.energy_kcal===null&&nutrition.energy_kj===null)missingLabels.push('Energy');
   if(nutrition.saturated_fat_g===null)missingLabels.push('Saturated Fat');
@@ -905,75 +1049,152 @@ function showReviewCard(nutrition){
   if(nutrition.fibre_g===null)missingLabels.push('Dietary Fibre');
   if(nutrition.protein_g===null)missingLabels.push('Protein');
   document.getElementById('review-note').textContent=missingLabels.length
-    ?`⚠ ${missingLabels.length} scoring field${missingLabels.length>1?'s':''} not found: ${missingLabels.join(', ')}. Enter values or leave blank (treated as 0).`
-    :'✓ All key scoring fields extracted. Verify before calculating.';
-  const cont=document.getElementById('review-fields');
-  // Energy block at top, standard fields, sodium/salt block at bottom
-  const standardHtml=FIELDS.map((f,i)=>{
-    const v=nutrition[f.key];const miss=v===null;
-    const div=i===4?'<div class="field-divider"></div>':'';
-    return `${div}<div class="field-group">
-      <div class="field-label"><span class="f-dot ${miss?'f-miss':'f-ok'}"></span>${f.label} <span style="color:var(--border);font-size:10px">(per 100g)</span></div>
-      <div class="field-row">
-        <input class="field-input${miss?' f-missing':''}" type="number" id="f-${f.key}"
-          placeholder="${miss?'Not found — enter manually':''}"
-          value="${v!==null?v:''}" step="${f.step}" min="0" inputmode="decimal">
-        <span class="field-unit">${f.unit}</span>
+    ?`⚠ Not found: ${missingLabels.join(', ')}. Enter from your pack — either column.`
+    :'✓ All key fields extracted. Verify before calculating.';
+
+  // Build rows
+  const cont = document.getElementById('review-fields');
+  const isSame = _portionG === 100;
+
+  function makeRow(key, label, unit, val100, servVal, extraServ='', extra100='', divider=false){
+    const miss = val100===null||val100===undefined;
+    const dot = `<span class="f-dot ${miss?'f-miss':'f-ok'}"></span>`;
+    const servStr = (!miss && servVal!==null) ? servVal : '';
+    const per100Str = (!miss && val100!==null) ? val100 : '';
+    return `${divider?'<div class="field-divider"></div>':''}
+    <div class="field-row-2col">
+      <div class="field-name-cell">${dot}${label}</div>
+      <div class="field-cell">
+        <input class="field-input-2${miss?' f-missing':''}" type="number" id="fs-${key}"
+          value="${servStr}" placeholder="—" step="any" min="0" inputmode="decimal" ${extraServ}>
+        <span class="field-unit-sm">${unit}</span>
+      </div>
+      <div class="field-cell">
+        <input class="field-input-2${miss?' f-missing':''}" type="number" id="f-${key}"
+          value="${per100Str}" placeholder="—" step="any" min="0" inputmode="decimal" ${extra100}>
+        <span class="field-unit-sm">${unit}</span>
       </div>
     </div>`;
-  }).join('');
-  cont.innerHTML=energyBlockHtml(nutrition)+standardHtml+'<div class="field-divider"></div>'+sodiumBlockHtml(nutrition);
+  }
+
+  function servVal(v100){ return (v100!==null&&v100!==undefined) ? +(v100*_portionG/100).toFixed(2) : null; }
+
+  let html = '';
+  // Energy — kcal row + kJ row
+  const eKcal=nutrition.energy_kcal, eKj=nutrition.energy_kj;
+  const eMiss=eKcal===null&&eKj===null;
+  const dot=`<span class="f-dot ${eMiss?'f-miss':'f-ok'}"></span>`;
+  html += `<div class="field-row-2col">
+    <div class="field-name-cell">${dot}Energy</div>
+    <div class="field-cell">
+      <input class="field-input-2${eMiss?' f-missing':''}" type="number" id="fs-energy_kcal"
+        value="${eKcal!==null?+(eKcal*_portionG/100).toFixed(1):''}" placeholder="kcal" step="1" min="0" inputmode="decimal"
+        oninput="onEnergyServInput('kcal')">
+      <span class="field-unit-sm">kcal</span>
+    </div>
+    <div class="field-cell">
+      <input class="field-input-2${eMiss?' f-missing':''}" type="number" id="f-energy_kcal"
+        value="${eKcal!==null?eKcal:''}" placeholder="kcal" step="1" min="0" inputmode="decimal"
+        oninput="onEnergyInput('kcal')">
+      <span class="field-unit-sm">kcal</span>
+    </div>
+  </div>
+  <div class="field-row-2col">
+    <div class="field-name-cell"><span style="width:11px;display:inline-block"></span>or kJ</div>
+    <div class="field-cell">
+      <input class="field-input-2" type="number" id="fs-energy_kj"
+        value="${eKj!==null?+(eKj*_portionG/100).toFixed(0):''}" placeholder="kJ" step="1" min="0" inputmode="decimal"
+        oninput="onEnergyServInput('kj')">
+      <span class="field-unit-sm">kJ</span>
+    </div>
+    <div class="field-cell">
+      <input class="field-input-2" type="number" id="f-energy_kj"
+        value="${eKj!==null?eKj:''}" placeholder="kJ" step="1" min="0" inputmode="decimal"
+        oninput="onEnergyInput('kj')">
+      <span class="field-unit-sm">kJ</span>
+    </div>
+  </div>`;
+
+  // Standard fields
+  for(const f of FIELDS.filter(f=>!f.isEnergy&&!f.isSodium)){
+    const v=nutrition[f.key];
+    html += makeRow(f.key, f.label, f.unit, v, servVal(v),
+      `oninput="onServingInput('${f.key}')"`,
+      `oninput="on100gInput('${f.key}')"`,
+      f.key==='protein_g');
+  }
+
+  // Sodium + Salt rows
+  const na=nutrition.sodium_mg;
+  const naMiss=na===null;
+  const naDot=`<span class="f-dot ${naMiss?'f-miss':'f-ok'}"></span>`;
+  html += `<div class="field-divider"></div>
+  <div class="field-row-2col">
+    <div class="field-name-cell">${naDot}Sodium</div>
+    <div class="field-cell">
+      <input class="field-input-2${naMiss?' f-missing':''}" type="number" id="fs-sodium_mg"
+        value="${na!==null?+(na*_portionG/100).toFixed(1):''}" placeholder="—" step="1" min="0" inputmode="decimal"
+        oninput="onSodiumServInput('sodium')">
+      <span class="field-unit-sm">mg</span>
+    </div>
+    <div class="field-cell">
+      <input class="field-input-2${naMiss?' f-missing':''}" type="number" id="f-sodium_mg"
+        value="${na!==null?na:''}" placeholder="—" step="1" min="0" inputmode="decimal"
+        oninput="onSodiumInput('sodium')">
+      <span class="field-unit-sm">mg</span>
+    </div>
+  </div>
+  <div class="field-row-2col">
+    <div class="field-name-cell"><span style="width:11px;display:inline-block"></span>or Salt</div>
+    <div class="field-cell">
+      <input class="field-input-2${naMiss?' f-missing':''}" type="number" id="fs-salt_g"
+        value="${na!==null?+(na/1000*2.5*_portionG/100).toFixed(3):''}" placeholder="—" step=".001" min="0" inputmode="decimal"
+        oninput="onSodiumServInput('salt')">
+      <span class="field-unit-sm">g</span>
+    </div>
+    <div class="field-cell">
+      <input class="field-input-2${naMiss?' f-missing':''}" type="number" id="f-salt_g"
+        value="${na!==null?+(na/1000*2.5).toFixed(3):''}" placeholder="—" step=".001" min="0" inputmode="decimal"
+        oninput="onSodiumInput('salt')">
+      <span class="field-unit-sm">g</span>
+    </div>
+  </div>`;
+
+  cont.innerHTML = html;
+
+  // Store for analytics
+  _reviewNutrition = nutrition;
+  const cf2=confScore(nutrition);
+  ph('review_shown',{fields_found:cf2.found,fields_missing:cf2.total-cf2.found,ocr_pct:Math.round(cf2.found/cf2.total*100),portion_g:_portionG});
+
   document.getElementById('review-card').classList.add('active');
   document.getElementById('review-card').scrollIntoView({behavior:'smooth',block:'start'});
-  // Store parsed nutrition for field edit tracking
-  _reviewNutrition=nutrition;
-  const cf2=confScore(nutrition);
-  ph('review_shown',{
-    fields_found: cf2.found,
-    fields_missing: cf2.total - cf2.found,
-    ocr_pct: Math.round(cf2.found/cf2.total*100)
-  });
-  // Attach edit listeners to all review inputs
-  document.querySelectorAll('.field-input').forEach(inp=>{
-    inp.addEventListener('change',function(){
-      trackFieldEdit(this.id.replace('f-',''), this.value, this.dataset.wasEmpty==='true');
-    },{once:true});
-  });
 }
 
+// ── Read form → build per-100g nutrition object → score ───────────
 function calculateFromForm(){
   const n={};
-  // Energy — prefer kcal input, fall back to kJ conversion
-  const kcalVal=document.getElementById('f-energy_kcal').value.trim();
-  const kjVal=document.getElementById('f-energy_kj').value.trim();
-  if(kcalVal!==''){
-    n.energy_kcal=parseFloat(kcalVal);
-    n.energy_kj=+(n.energy_kcal*4.184).toFixed(1);
-  } else if(kjVal!==''){
-    n.energy_kj=parseFloat(kjVal);
-    n.energy_kcal=+(n.energy_kj/4.184).toFixed(1);
-  } else {
-    n.energy_kcal=null;n.energy_kj=null;
-  }
+  // Energy — prefer kcal, fall back to kJ
+  const kcalV=document.getElementById('f-energy_kcal').value.trim();
+  const kjV=document.getElementById('f-energy_kj').value.trim();
+  if(kcalV!==''){n.energy_kcal=parseFloat(kcalV);n.energy_kj=+(n.energy_kcal*4.184).toFixed(1);}
+  else if(kjV!==''){n.energy_kj=parseFloat(kjV);n.energy_kcal=+(n.energy_kj/4.184).toFixed(1);}
+  else{n.energy_kcal=null;n.energy_kj=null;}
   // Standard fields
-  for(const f of FIELDS){
+  for(const f of FIELDS.filter(f=>!f.isEnergy&&!f.isSodium)){
     const v=document.getElementById('f-'+f.key).value.trim();
     n[f.key]=v===''?null:parseFloat(v);
   }
-  // Sodium — prefer sodium input, fall back to salt conversion
-  const sodiumVal=document.getElementById('f-sodium_mg').value.trim();
-  const saltVal=document.getElementById('f-salt_g').value.trim();
-  if(sodiumVal!==''){
-    n.sodium_mg=parseFloat(sodiumVal);
-  } else if(saltVal!==''){
-    n.sodium_mg=+(parseFloat(saltVal)/2.5*1000).toFixed(1);
-  } else {
-    n.sodium_mg=null;
-  }
+  // Sodium — prefer sodium, fall back to salt
+  const naV=document.getElementById('f-sodium_mg').value.trim();
+  const saltV=document.getElementById('f-salt_g').value.trim();
+  if(naV!==''){n.sodium_mg=parseFloat(naV);}
+  else if(saltV!==''){n.sodium_mg=+(parseFloat(saltV)/2.5*1000).toFixed(1);}
+  else{n.sodium_mg=null;}
+
   const sc=calcScore(n);
   const{verdict,strengths,concerns}=genVerdict(n,sc);
-  document.getElementById('review-card').classList.remove('active');
-  showResult({per100g:n,...sc,strengths,concerns,verdict});
+  showResult({per100g:n,portionG:_portionG,...sc,strengths,concerns,verdict});
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1019,27 +1240,65 @@ async function analyseImage(){
   }
 }
 function showResult(r){
-  ph('grade_calculated',{
-    grade: r.grade,
-    final_score: r.final_score,
-    negative_points: r.negative_points.total,
-    positive_points: r.positive_points.total
-  });
+  ph('grade_calculated',{grade:r.grade,final_score:r.final_score,negative_points:r.negative_points.total,positive_points:r.positive_points.total,portion_g:r.portionG});
   const p=r.per100g;
+  const portionG=r.portionG||100;
+  const isSame=portionG===100;
+
   document.getElementById('result-name').textContent='Analysed Product';
   const badge=document.getElementById('grade-badge');badge.textContent=r.grade;badge.className='grade-badge grade-'+r.grade;
   ['A','B','C','D','E'].forEach(g=>document.getElementById('pill-'+g).classList.toggle('active',g===r.grade));
-  const fmt=(v,dec,u)=>v!==null&&v!==undefined?v.toFixed(dec)+u:'N/A';
+
+  // Section title
+  document.getElementById('result-section-title').textContent = isSame
+    ? 'Nutritional Values (per 100g)'
+    : `Nutritional Values`;
+
+  const fmt=(v,dec,u)=>v!==null&&v!==undefined?v.toFixed(dec)+u:'—';
+  const fmtS=(v,dec,u)=>v!==null&&v!==undefined?+(v*portionG/100).toFixed(dec)+u:'—';
+
   const nutrients=[
-    {name:'Energy',       val:fmt(p.energy_kcal,0,' kcal'),pct:Math.min(100,((p.energy_kcal||0)/600)*100),bad:true},
-    {name:'Total Fat',    val:fmt(p.fat_g,1,'g'),          pct:Math.min(100,((p.fat_g||0)/35)*100),       bad:true},
-    {name:'Saturated Fat',val:fmt(p.saturated_fat_g,1,'g'),pct:Math.min(100,((p.saturated_fat_g||0)/15)*100),bad:true},
-    {name:'Sugar',        val:fmt(p.sugar_g,1,'g'),         pct:Math.min(100,((p.sugar_g||0)/50)*100),     bad:true},
-    {name:'Fibre',        val:fmt(p.fibre_g,1,'g'),         pct:Math.min(100,((p.fibre_g||0)/10)*100),     bad:false},
-    {name:'Protein',      val:fmt(p.protein_g,1,'g'),       pct:Math.min(100,((p.protein_g||0)/30)*100),   bad:false},
-    {name:'Sodium',       val:fmt(p.sodium_mg,0,'mg'),      pct:Math.min(100,((p.sodium_mg||0)/1000)*100), bad:true},
+    {name:'Energy',        v100:p.energy_kcal, dec:0, u:' kcal', pct:Math.min(100,((p.energy_kcal||0)/600)*100),  bad:true},
+    {name:'Total Fat',     v100:p.fat_g,        dec:1, u:'g',     pct:Math.min(100,((p.fat_g||0)/35)*100),         bad:true},
+    {name:'Saturated Fat', v100:p.saturated_fat_g,dec:1,u:'g',   pct:Math.min(100,((p.saturated_fat_g||0)/15)*100),bad:true},
+    {name:'Sugar',         v100:p.sugar_g,      dec:1, u:'g',     pct:Math.min(100,((p.sugar_g||0)/50)*100),       bad:true},
+    {name:'Fibre',         v100:p.fibre_g,      dec:1, u:'g',     pct:Math.min(100,((p.fibre_g||0)/10)*100),       bad:false},
+    {name:'Protein',       v100:p.protein_g,    dec:1, u:'g',     pct:Math.min(100,((p.protein_g||0)/30)*100),     bad:false},
+    {name:'Sodium',        v100:p.sodium_mg,    dec:0, u:'mg',    pct:Math.min(100,((p.sodium_mg||0)/1000)*100),   bad:true},
   ];
-  document.getElementById('nutrient-grid').innerHTML=nutrients.map(n=>`<div class="nutrient-row"><div class="nutrient-name">${n.name}</div><div class="nutrient-bar-wrap"><div class="nutrient-bar-fill ${n.bad?'fill-bad':'fill-good'}" style="width:${n.pct}%"></div></div><div class="nutrient-val">${n.val}</div></div>`).join('');
+
+  if(isSame){
+    // Single column — same as before
+    document.getElementById('nutrient-grid').innerHTML=
+      `<div class="nutrient-table-head">
+        <div class="nt-col-head">Nutrient</div>
+        <div></div>
+        <div class="nt-col-head right" colspan="2">Per 100g</div>
+      </div>`+
+      nutrients.map(n=>`
+      <div class="nutrient-row-2">
+        <div class="nutrient-name">${n.name}</div>
+        <div class="nutrient-bar-wrap"><div class="nutrient-bar-fill ${n.bad?'fill-bad':'fill-good'}" style="width:${n.pct}%"></div></div>
+        <div class="nutrient-val" style="grid-column:3/5">${fmt(n.v100,n.dec,n.u)}</div>
+      </div>`).join('');
+  } else {
+    // Two columns — per serving | per 100g
+    document.getElementById('nutrient-grid').innerHTML=
+      `<div class="nutrient-table-head">
+        <div class="nt-col-head">Nutrient</div>
+        <div></div>
+        <div class="nt-col-head right">Per ${portionG}g</div>
+        <div class="nt-col-head right">Per 100g</div>
+      </div>`+
+      nutrients.map(n=>`
+      <div class="nutrient-row-2">
+        <div class="nutrient-name">${n.name}</div>
+        <div class="nutrient-bar-wrap"><div class="nutrient-bar-fill ${n.bad?'fill-bad':'fill-good'}" style="width:${n.pct}%"></div></div>
+        <div class="nutrient-val muted">${fmtS(n.v100,n.dec,n.u)}</div>
+        <div class="nutrient-val">${fmt(n.v100,n.dec,n.u)}</div>
+      </div>`).join('');
+  }
+
   document.getElementById('bad-pts').textContent=r.negative_points.total;
   document.getElementById('good-pts').textContent=r.positive_points.total;
   document.getElementById('final-score').textContent=r.final_score+' → Grade '+r.grade;
