@@ -720,11 +720,27 @@ function parseNutrition(rawText){
     }
   }
   let serving_size_g=null;
-  const sHit=matchLines(lines,/serving\s*size|per\s*serving|serving\s*per/i)[0];
-  if(sHit){
-    const combined=sHit.line+' '+sHit.next;
-    const m=combined.match(/\((\d+(?:\.\d+)?)\s*g\s*\)/i)||combined.match(/\b(\d+(?:\.\d+)?)\s*g\b/i);
-    if(m)serving_size_g=parseFloat(m[1]);
+  // Serving size detection — covers: "Serving size 67g", "per 67g serve", "(30g)", "per 20g serving"
+  // Also scans first 5 lines for header-embedded serving sizes (e.g. dark label with split header)
+  const SERVING_PATTERNS=[
+    /serving\s*size\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*g/i,
+    /per\s*(\d+(?:\.\d+)?)\s*g\s*serv/i,
+    /\bserv(?:ing|e)?\s+(\d+(?:\.\d+)?)\s*g\b/i,
+    /\((\d+(?:\.\d+)?)\s*g\s*\)/i,
+  ];
+  function extractServingG(str){
+    for(const re of SERVING_PATTERNS){const m=str.match(re);if(m)return parseFloat(m[1]);}
+    return null;
+  }
+  // First try: standard serving size line
+  const sHit=matchLines(lines,/serving\s*size|per\s*serving|serving\s*per|\bserve\b|per\s*\d+\s*g\s*serv/i)[0];
+  if(sHit){const combined=sHit.line+' '+sHit.next;serving_size_g=extractServingG(combined);}
+  // Second try: scan first 5 lines for header-embedded serving size (e.g. "per 67g serve" in title row)
+  if(!serving_size_g){
+    for(let i=0;i<Math.min(5,lines.length);i++){
+      const v=extractServingG(lines[i]);
+      if(v&&v>=5&&v<500){serving_size_g=v;break;}
+    }
   }
   let scale=1;
   if(!struct&&serving_size_g&&serving_size_g>0&&serving_size_g<95&&energy_kcal!==null){
