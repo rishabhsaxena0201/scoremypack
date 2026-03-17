@@ -120,6 +120,7 @@ footer{padding:16px 20px;text-align:center;font-size:11px;color:var(--border);bo
 .field-input-2:focus{border-color:var(--accent-bright)}
 .field-input-2.f-missing{border-color:rgba(230,62,17,.4);background:rgba(230,62,17,.04)}
 .field-input-2.f-missing:focus{border-color:var(--accent-bright);background:var(--surface2)}
+.field-input-2.f-readonly{background:transparent;border-color:transparent;color:var(--muted);cursor:default;pointer-events:none;font-weight:500}
 .field-unit-sm{font-size:9px;color:var(--border);display:block;text-align:center;margin-top:1px}
 .field-divider{height:1px;background:var(--border);margin:4px 0}
 .review-actions{padding:12px 20px 20px;display:flex;flex-direction:column;gap:10px}
@@ -247,7 +248,7 @@ footer{padding:16px 20px;text-align:center;font-size:11px;color:var(--border);bo
         <div class="field-table-head">
           <div class="col-head col-name">Nutrient</div>
           <div class="col-head" id="col-head-serving">Per serving</div>
-          <div class="col-head">Per 100g</div>
+          <div class="col-head">Per 100g <span style="font-size:9px;opacity:.6">(auto)</span></div>
         </div>
         <div id="review-fields"></div>
       </div>
@@ -837,376 +838,153 @@ function hideAll(){['result-card','error-card','review-card','rescan-btn'].forEa
 function showError(msg){document.getElementById('error-msg').textContent=msg;document.getElementById('error-card').classList.add('active');document.getElementById('rescan-btn').classList.add('active');}
 
 // ═══════════════════════════════════════════════════════════════════
-//  REVIEW CARD  v2 — two-column (per-serving | per-100g), editable portion
+//  REVIEW CARD  v3
+//  Column 1 (per serving) — editable, raw input from pack
+//  Column 2 (per 100g)    — read only, always = col1 × 100 / portionG
+//  Portion size field     — editable, triggers col2 recalc
 // ═══════════════════════════════════════════════════════════════════
 
-// Field definitions — key, label, unit, max for validation
 const FIELDS=[
-  {key:'energy_kcal',    label:'Energy',        unit:'kcal', altKey:'energy_kj',    altUnit:'kJ',  altFactor:4.184, isEnergy:true},
-  {key:'fat_g',          label:'Total Fat',     unit:'g'},
-  {key:'saturated_fat_g',label:'Saturated Fat', unit:'g'},
-  {key:'carbs_g',        label:'Carbohydrates', unit:'g'},
-  {key:'sugar_g',        label:'Total Sugar',   unit:'g'},
-  {key:'fibre_g',        label:'Dietary Fibre', unit:'g'},
-  {key:'protein_g',      label:'Protein',       unit:'g'},
-  {key:'sodium_mg',      label:'Sodium',        unit:'mg',  altKey:'salt_g',       altUnit:'g',   altFactor:null, isSodium:true},
+  {key:'energy_kcal', label:'Energy',        unit:'kcal'},
+  {key:'fat_g',       label:'Total Fat',      unit:'g'},
+  {key:'saturated_fat_g',label:'Saturated Fat',unit:'g'},
+  {key:'carbs_g',     label:'Carbohydrates',  unit:'g'},
+  {key:'sugar_g',     label:'Total Sugar',    unit:'g'},
+  {key:'fibre_g',     label:'Dietary Fibre',  unit:'g'},
+  {key:'protein_g',   label:'Protein',        unit:'g'},
+  {key:'sodium_mg',   label:'Sodium',         unit:'mg'},
 ];
 const SCORE_KEYS=new Set(['energy_kcal','saturated_fat_g','sugar_g','sodium_mg','fibre_g','protein_g']);
 
-// State
-let _nutrition100g = {}; // per-100g values as parsed — source of truth
-let _portionG = 100;     // current portion size
+let _portionG = 100;
 
-// ── Portion size change handler ───────────────────────────────────
+// ── Single recalc function — reads all serving inputs, writes all 100g outputs ──
+function recalc100g(){
+  const p = _portionG;
+  if(!p||p<=0) return;
+  const factor = 100 / p;
+  for(const f of FIELDS){
+    const servEl = document.getElementById('fs-'+f.key);
+    const per100El = document.getElementById('f-'+f.key);
+    if(!servEl||!per100El) continue;
+    const v = parseFloat(servEl.value);
+    per100El.value = (!isNaN(v) && servEl.value!=='') ? +(v * factor).toFixed(f.unit==='mg'?1:1) : '';
+  }
+}
+
+// ── Portion size change ───────────────────────────────────────────
 function onPortionChange(){
   const el = document.getElementById('portion-size');
   const v = parseFloat(el.value);
   if(!v||v<=0||v>500) return;
-  // Only run if review form is actually rendered
-  if(!document.getElementById('f-energy_kcal')) return;
   _portionG = v;
-  // Recalculate per-serving column from the per-100g INPUT VALUES (not _nutrition100g)
-  // This respects any manual edits the user has made to the 100g column
-  for(const f of FIELDS){
-    const per100El = document.getElementById('f-'+f.key);
-    const servEl = document.getElementById('fs-'+f.key);
-    if(!per100El||!servEl) continue;
-    const v100 = parseFloat(per100El.value);
-    if(!isNaN(v100)){
-      servEl.value = +(v100 * _portionG / 100).toFixed(f.unit==='mg'?1:2);
-      _nutrition100g[f.key] = v100; // keep in sync
-    }
-  }
-  // Energy kJ serving
-  const kjEl = document.getElementById('f-energy_kj');
-  const kjSEl = document.getElementById('fs-energy_kj');
-  if(kjEl&&kjSEl&&kjEl.value!==''){
-    const kj100=parseFloat(kjEl.value);
-    if(!isNaN(kj100)) kjSEl.value=+(kj100*_portionG/100).toFixed(0);
-  }
-  // Salt serving (from sodium 100g)
-  const naEl = document.getElementById('f-sodium_mg');
-  const saltSEl = document.getElementById('fs-salt_g');
-  const saltEl = document.getElementById('f-salt_g');
-  if(naEl&&saltSEl&&naEl.value!==''){
-    const na100=parseFloat(naEl.value);
-    if(!isNaN(na100)) saltSEl.value=+(na100/1000*2.5*_portionG/100).toFixed(3);
-  }
-  if(naEl&&saltEl&&naEl.value!==''){
-    const na100=parseFloat(naEl.value);
-    if(!isNaN(na100)) saltEl.value=+(na100/1000*2.5).toFixed(3);
-  }
-  updatePortionNote();
-}
-
-function updatePortionNote(){
-  const note = document.getElementById('portion-same-note');
+  // Update column header
   const head = document.getElementById('col-head-serving');
-  if(_portionG===100){
-    note.textContent='= 100g';
-    head.textContent='Per 100g';
-  } else {
-    note.textContent='';
-    head.textContent=`Per ${_portionG}g`;
-  }
+  if(head) head.textContent = `Per ${_portionG}g`;
+  const note = document.getElementById('portion-same-note');
+  if(note) note.textContent = _portionG===100 ? '= 100g' : '';
+  // Recalc 100g column
+  recalc100g();
 }
 
-// ── Live sync: user edits serving → updates 100g, or 100g → serving ─
-function onServingInput(key){
-  const servEl = document.getElementById('fs-'+key);
-  const per100El = document.getElementById('f-'+key);
-  if(!servEl||!per100El) return;
-  const v = parseFloat(servEl.value);
-  if(!isNaN(v) && _portionG > 0){
-    const v100 = +(v * 100 / _portionG).toFixed(key==='sodium_mg'?1:2);
-    per100El.value = v100;
-    _nutrition100g[key] = v100;
-  }
-}
-
-function on100gInput(key){
-  const per100El = document.getElementById('f-'+key);
-  const servEl = document.getElementById('fs-'+key);
-  if(!per100El||!servEl) return;
-  const v = parseFloat(per100El.value);
-  if(!isNaN(v)){
-    _nutrition100g[key] = v;
-    servEl.value = +(v * _portionG / 100).toFixed(key==='sodium_mg'?1:2);
-  }
-}
-
-// Energy kJ ↔ kcal sync
-function onEnergyInput(changed){
-  const kcalEl=document.getElementById('f-energy_kcal');
-  const kjEl=document.getElementById('f-energy_kj');
-  const kcalSEl=document.getElementById('fs-energy_kcal');
-  const kjSEl=document.getElementById('fs-energy_kj');
-  if(changed==='kcal'&&kcalEl.value!==''){
-    const kcal=parseFloat(kcalEl.value);
-    if(!isNaN(kcal)){
-      kjEl.value=+(kcal*4.184).toFixed(0);
-      _nutrition100g.energy_kcal=kcal; _nutrition100g.energy_kj=+(kcal*4.184).toFixed(1);
-      if(kcalSEl) kcalSEl.value=+(kcal*_portionG/100).toFixed(1);
-      if(kjSEl)   kjSEl.value=+(kcal*4.184*_portionG/100).toFixed(0);
-    }
-  } else if(changed==='kj'&&kjEl.value!==''){
-    const kj=parseFloat(kjEl.value);
-    if(!isNaN(kj)){
-      kcalEl.value=+(kj/4.184).toFixed(1);
-      _nutrition100g.energy_kj=kj; _nutrition100g.energy_kcal=+(kj/4.184).toFixed(1);
-      if(kjSEl)   kjSEl.value=+(kj*_portionG/100).toFixed(0);
-      if(kcalSEl) kcalSEl.value=+(kj/4.184*_portionG/100).toFixed(1);
-    }
-  }
-}
-
-// Energy serving kcal ↔ kJ sync
-function onEnergyServInput(changed){
-  const kcalSEl=document.getElementById('fs-energy_kcal');
-  const kjSEl=document.getElementById('fs-energy_kj');
-  const kcalEl=document.getElementById('f-energy_kcal');
-  const kjEl=document.getElementById('f-energy_kj');
-  if(changed==='kcal'&&kcalSEl.value!==''){
-    const v=parseFloat(kcalSEl.value);
-    if(!isNaN(v)){
-      kjSEl.value=+(v*4.184).toFixed(0);
-      const v100=+(v*100/_portionG).toFixed(1);
-      kcalEl.value=v100; kjEl.value=+(v100*4.184).toFixed(0);
-      _nutrition100g.energy_kcal=v100; _nutrition100g.energy_kj=+(v100*4.184).toFixed(1);
-    }
-  } else if(changed==='kj'&&kjSEl.value!==''){
-    const v=parseFloat(kjSEl.value);
-    if(!isNaN(v)){
-      kcalSEl.value=+(v/4.184).toFixed(1);
-      const v100=+(v*100/_portionG/4.184).toFixed(1);
-      kcalEl.value=v100; kjEl.value=+(v100*4.184).toFixed(0);
-      _nutrition100g.energy_kcal=v100; _nutrition100g.energy_kj=+(v100*4.184).toFixed(1);
-    }
-  }
-}
-
-// Sodium ↔ Salt sync
-function onSodiumInput(changed){
-  const naEl=document.getElementById('f-sodium_mg');
-  const saltEl=document.getElementById('f-salt_g');
-  const naSEl=document.getElementById('fs-sodium_mg');
-  const saltSEl=document.getElementById('fs-salt_g');
-  if(changed==='sodium'&&naEl.value!==''){
-    const v=parseFloat(naEl.value);
-    if(!isNaN(v)){
-      if(saltEl) saltEl.value=+(v/1000*2.5).toFixed(3);
-      _nutrition100g.sodium_mg=v;
-      if(naSEl)   naSEl.value=+(v*_portionG/100).toFixed(1);
-      if(saltSEl) saltSEl.value=+(v/1000*2.5*_portionG/100).toFixed(3);
-    }
-  } else if(changed==='salt'&&saltEl&&saltEl.value!==''){
-    const v=parseFloat(saltEl.value);
-    if(!isNaN(v)){
-      const na=+(v/2.5*1000).toFixed(1);
-      naEl.value=na;
-      _nutrition100g.sodium_mg=na;
-      if(naSEl)   naSEl.value=+(na*_portionG/100).toFixed(1);
-      if(saltSEl) saltSEl.value=+(v*_portionG/100).toFixed(3);
-    }
-  }
-}
-function onSodiumServInput(changed){
-  const naEl=document.getElementById('f-sodium_mg');
-  const saltEl=document.getElementById('f-salt_g');
-  const naSEl=document.getElementById('fs-sodium_mg');
-  const saltSEl=document.getElementById('fs-salt_g');
-  if(changed==='sodium'&&naSEl.value!==''){
-    const v=parseFloat(naSEl.value);
-    if(!isNaN(v)){
-      const na100=+(v*100/_portionG).toFixed(1);
-      naEl.value=na100; if(saltEl) saltEl.value=+(na100/1000*2.5).toFixed(3);
-      if(saltSEl) saltSEl.value=+(v/1000*2.5).toFixed(3);
-      _nutrition100g.sodium_mg=na100;
-    }
-  } else if(changed==='salt'&&saltSEl&&saltSEl.value!==''){
-    const v=parseFloat(saltSEl.value);
-    if(!isNaN(v)){
-      const na100=+(v/2.5*1000*100/_portionG).toFixed(1);
-      naEl.value=na100; if(saltEl) saltEl.value=+(na100/1000*2.5).toFixed(3);
-      if(naSEl) naSEl.value=+(na100*_portionG/100).toFixed(1);
-      _nutrition100g.sodium_mg=na100;
-    }
-  }
+// ── Any serving column edit triggers 100g recalc ──────────────────
+function onServingInput(){
+  recalc100g();
 }
 
 // ── Build review form ─────────────────────────────────────────────
 function showReviewCard(nutrition){
-  // Store per-100g as source of truth
-  _nutrition100g = Object.assign({}, nutrition);
   _portionG = nutrition.serving_size_g || 100;
 
   // OCR confidence badge
-  const cf=confScore(nutrition);
-  const badge=document.getElementById('ocr-conf');
-  const pct=Math.round(cf.found/cf.total*100);
-  badge.textContent=`${pct}% OCR`;
-  badge.className='ocr-conf '+(pct>=80?'conf-hi':pct>=50?'conf-md':'conf-lo');
+  const cf = confScore(nutrition);
+  const pct = Math.round(cf.found/cf.total*100);
+  const badge = document.getElementById('ocr-conf');
+  badge.textContent = `${pct}% OCR`;
+  badge.className = 'ocr-conf '+(pct>=80?'conf-hi':pct>=50?'conf-md':'conf-lo');
 
-  // Portion size input
+  // Portion size field
   const portionEl = document.getElementById('portion-size');
   portionEl.value = _portionG;
-  updatePortionNote();
+  const head = document.getElementById('col-head-serving');
+  if(head) head.textContent = `Per ${_portionG}g`;
+  const note = document.getElementById('portion-same-note');
+  if(note) note.textContent = _portionG===100 ? '= 100g' : '';
 
   // Missing fields note
   const missingLabels=[];
-  if(nutrition.energy_kcal===null&&nutrition.energy_kj===null)missingLabels.push('Energy');
-  if(nutrition.saturated_fat_g===null)missingLabels.push('Saturated Fat');
-  if(nutrition.sugar_g===null)missingLabels.push('Total Sugar');
-  if(nutrition.sodium_mg===null)missingLabels.push('Sodium/Salt');
-  if(nutrition.fibre_g===null)missingLabels.push('Dietary Fibre');
-  if(nutrition.protein_g===null)missingLabels.push('Protein');
-  document.getElementById('review-note').textContent=missingLabels.length
-    ?`⚠ Not found: ${missingLabels.join(', ')}. Enter from your pack — either column.`
-    :'✓ All key fields extracted. Verify before calculating.';
+  if(nutrition.energy_kcal===null) missingLabels.push('Energy');
+  if(nutrition.saturated_fat_g===null) missingLabels.push('Saturated Fat');
+  if(nutrition.sugar_g===null) missingLabels.push('Total Sugar');
+  if(nutrition.sodium_mg===null) missingLabels.push('Sodium');
+  if(nutrition.fibre_g===null) missingLabels.push('Dietary Fibre');
+  if(nutrition.protein_g===null) missingLabels.push('Protein');
+  document.getElementById('review-note').textContent = missingLabels.length
+    ? `⚠ Not found: ${missingLabels.join(', ')}. Enter from your pack.`
+    : '✓ All key fields extracted. Verify before calculating.';
 
-  // Build rows
+  // Build rows — serving column is editable, 100g column is readonly
   const cont = document.getElementById('review-fields');
-  const isSame = _portionG === 100;
+  const factor = 100 / _portionG;
 
-  function makeRow(key, label, unit, val100, servVal, extraServ='', extra100='', divider=false){
-    const miss = val100===null||val100===undefined;
+  function servingVal(v100){
+    // Convert 100g value back to per-serving for display in col1
+    if(v100===null||v100===undefined) return '';
+    return +(v100 / factor).toFixed(v100>10?1:2);
+  }
+  function per100Val(v100){
+    if(v100===null||v100===undefined) return '';
+    return v100;
+  }
+
+  let html = '';
+  for(const f of FIELDS){
+    const v100 = nutrition[f.key];
+    const miss = v100===null||v100===undefined;
     const dot = `<span class="f-dot ${miss?'f-miss':'f-ok'}"></span>`;
-    const servStr = (!miss && servVal!==null) ? servVal : '';
-    const per100Str = (!miss && val100!==null) ? val100 : '';
-    return `${divider?'<div class="field-divider"></div>':''}
+    html += `
     <div class="field-row-2col">
-      <div class="field-name-cell">${dot}${label}</div>
+      <div class="field-name-cell">${dot}${f.label}</div>
       <div class="field-cell">
-        <input class="field-input-2${miss?' f-missing':''}" type="number" id="fs-${key}"
-          value="${servStr}" placeholder="—" step="any" min="0" inputmode="decimal" ${extraServ}>
-        <span class="field-unit-sm">${unit}</span>
+        <input class="field-input-2${miss?' f-missing':''}" type="number"
+          id="fs-${f.key}"
+          value="${servingVal(v100)}"
+          placeholder="—" step="any" min="0" inputmode="decimal"
+          oninput="onServingInput()">
+        <span class="field-unit-sm">${f.unit}</span>
       </div>
       <div class="field-cell">
-        <input class="field-input-2${miss?' f-missing':''}" type="number" id="f-${key}"
-          value="${per100Str}" placeholder="—" step="any" min="0" inputmode="decimal" ${extra100}>
-        <span class="field-unit-sm">${unit}</span>
+        <input class="field-input-2 f-readonly" type="number"
+          id="f-${f.key}"
+          value="${per100Val(v100)}"
+          placeholder="—" readonly tabindex="-1">
+        <span class="field-unit-sm">${f.unit}</span>
       </div>
     </div>`;
   }
-
-  function servVal(v100){ return (v100!==null&&v100!==undefined) ? +(v100*_portionG/100).toFixed(2) : null; }
-
-  let html = '';
-  // Energy — kcal row + kJ row
-  const eKcal=nutrition.energy_kcal, eKj=nutrition.energy_kj;
-  const eMiss=eKcal===null&&eKj===null;
-  const dot=`<span class="f-dot ${eMiss?'f-miss':'f-ok'}"></span>`;
-  html += `<div class="field-row-2col">
-    <div class="field-name-cell">${dot}Energy</div>
-    <div class="field-cell">
-      <input class="field-input-2${eMiss?' f-missing':''}" type="number" id="fs-energy_kcal"
-        value="${eKcal!==null?+(eKcal*_portionG/100).toFixed(1):''}" placeholder="kcal" step="1" min="0" inputmode="decimal"
-        oninput="onEnergyServInput('kcal')">
-      <span class="field-unit-sm">kcal</span>
-    </div>
-    <div class="field-cell">
-      <input class="field-input-2${eMiss?' f-missing':''}" type="number" id="f-energy_kcal"
-        value="${eKcal!==null?eKcal:''}" placeholder="kcal" step="1" min="0" inputmode="decimal"
-        oninput="onEnergyInput('kcal')">
-      <span class="field-unit-sm">kcal</span>
-    </div>
-  </div>
-  <div class="field-row-2col">
-    <div class="field-name-cell"><span style="width:11px;display:inline-block"></span>or kJ</div>
-    <div class="field-cell">
-      <input class="field-input-2" type="number" id="fs-energy_kj"
-        value="${eKj!==null?+(eKj*_portionG/100).toFixed(0):''}" placeholder="kJ" step="1" min="0" inputmode="decimal"
-        oninput="onEnergyServInput('kj')">
-      <span class="field-unit-sm">kJ</span>
-    </div>
-    <div class="field-cell">
-      <input class="field-input-2" type="number" id="f-energy_kj"
-        value="${eKj!==null?eKj:''}" placeholder="kJ" step="1" min="0" inputmode="decimal"
-        oninput="onEnergyInput('kj')">
-      <span class="field-unit-sm">kJ</span>
-    </div>
-  </div>`;
-
-  // Standard fields
-  for(const f of FIELDS.filter(f=>!f.isEnergy&&!f.isSodium)){
-    const v=nutrition[f.key];
-    html += makeRow(f.key, f.label, f.unit, v, servVal(v),
-      `oninput="onServingInput('${f.key}')"`,
-      `oninput="on100gInput('${f.key}')"`,
-      f.key==='protein_g');
-  }
-
-  // Sodium + Salt rows
-  const na=nutrition.sodium_mg;
-  const naMiss=na===null;
-  const naDot=`<span class="f-dot ${naMiss?'f-miss':'f-ok'}"></span>`;
-  html += `<div class="field-divider"></div>
-  <div class="field-row-2col">
-    <div class="field-name-cell">${naDot}Sodium</div>
-    <div class="field-cell">
-      <input class="field-input-2${naMiss?' f-missing':''}" type="number" id="fs-sodium_mg"
-        value="${na!==null?+(na*_portionG/100).toFixed(1):''}" placeholder="—" step="1" min="0" inputmode="decimal"
-        oninput="onSodiumServInput('sodium')">
-      <span class="field-unit-sm">mg</span>
-    </div>
-    <div class="field-cell">
-      <input class="field-input-2${naMiss?' f-missing':''}" type="number" id="f-sodium_mg"
-        value="${na!==null?na:''}" placeholder="—" step="1" min="0" inputmode="decimal"
-        oninput="onSodiumInput('sodium')">
-      <span class="field-unit-sm">mg</span>
-    </div>
-  </div>
-  <div class="field-row-2col">
-    <div class="field-name-cell"><span style="width:11px;display:inline-block"></span>or Salt</div>
-    <div class="field-cell">
-      <input class="field-input-2${naMiss?' f-missing':''}" type="number" id="fs-salt_g"
-        value="${na!==null?+(na/1000*2.5*_portionG/100).toFixed(3):''}" placeholder="—" step=".001" min="0" inputmode="decimal"
-        oninput="onSodiumServInput('salt')">
-      <span class="field-unit-sm">g</span>
-    </div>
-    <div class="field-cell">
-      <input class="field-input-2${naMiss?' f-missing':''}" type="number" id="f-salt_g"
-        value="${na!==null?+(na/1000*2.5).toFixed(3):''}" placeholder="—" step=".001" min="0" inputmode="decimal"
-        oninput="onSodiumInput('salt')">
-      <span class="field-unit-sm">g</span>
-    </div>
-  </div>`;
-
   cont.innerHTML = html;
 
-  // Store for analytics
+  // Analytics
   _reviewNutrition = nutrition;
-  const cf2=confScore(nutrition);
-  ph('review_shown',{fields_found:cf2.found,fields_missing:cf2.total-cf2.found,ocr_pct:Math.round(cf2.found/cf2.total*100),portion_g:_portionG});
+  ph('review_shown',{fields_found:cf.found,fields_missing:cf.total-cf.found,ocr_pct:pct,portion_g:_portionG});
 
   document.getElementById('review-card').classList.add('active');
   document.getElementById('review-card').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-// ── Read form → build per-100g nutrition object → score ───────────
+// ── Read serving column → scale to 100g → score ──────────────────
 function calculateFromForm(){
-  const n={};
-  // Energy — prefer kcal, fall back to kJ
-  const kcalV=document.getElementById('f-energy_kcal').value.trim();
-  const kjV=document.getElementById('f-energy_kj').value.trim();
-  if(kcalV!==''){n.energy_kcal=parseFloat(kcalV);n.energy_kj=+(n.energy_kcal*4.184).toFixed(1);}
-  else if(kjV!==''){n.energy_kj=parseFloat(kjV);n.energy_kcal=+(n.energy_kj/4.184).toFixed(1);}
-  else{n.energy_kcal=null;n.energy_kj=null;}
-  // Standard fields
-  for(const f of FIELDS.filter(f=>!f.isEnergy&&!f.isSodium)){
-    const v=document.getElementById('f-'+f.key).value.trim();
-    n[f.key]=v===''?null:parseFloat(v);
+  const factor = 100 / _portionG;
+  const n = {};
+  for(const f of FIELDS){
+    const servEl = document.getElementById('fs-'+f.key);
+    const v = servEl && servEl.value!=='' ? parseFloat(servEl.value) : null;
+    n[f.key] = (v!==null&&!isNaN(v)) ? +(v*factor).toFixed(1) : null;
   }
-  // Sodium — prefer sodium, fall back to salt
-  const naV=document.getElementById('f-sodium_mg').value.trim();
-  const saltV=document.getElementById('f-salt_g').value.trim();
-  if(naV!==''){n.sodium_mg=parseFloat(naV);}
-  else if(saltV!==''){n.sodium_mg=+(parseFloat(saltV)/2.5*1000).toFixed(1);}
-  else{n.sodium_mg=null;}
-
-  const sc=calcScore(n);
-  const{verdict,strengths,concerns}=genVerdict(n,sc);
-  showResult({per100g:n,portionG:_portionG,...sc,strengths,concerns,verdict});
+  if(n.energy_kcal!==null) n.energy_kj = +(n.energy_kcal*4.184).toFixed(1);
+  const sc = calcScore(n);
+  const{verdict,strengths,concerns} = genVerdict(n,sc);
+  showResult({per100g:n, portionG:_portionG, ...sc, strengths, concerns, verdict});
 }
 
 // ═══════════════════════════════════════════════════════════════════
