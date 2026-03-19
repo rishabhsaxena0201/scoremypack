@@ -26,9 +26,9 @@ posthog.init('phc_pV141cAwQHLesHjKjr21zJ5jdSgyYG2OwBk8vEjazhU', {
 <style>
 :root{--bg:#0B1520;--surface:#111E2E;--surface2:#172438;--border:#1E3450;--text:#E2EBF5;--muted:#7A96B0;--accent:#1464B4;--accent-bright:#2E8AE6;--grade-a:#038141;--grade-b:#85BB2F;--grade-c:#FECB02;--grade-d:#EE8100;--grade-e:#E63E11}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 50% at 20% -10%,rgba(20,100,180,.15) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 80% 110%,rgba(40,80,100,.12) 0%,transparent 60%);pointer-events:none;z-index:0}
-.app{position:relative;z-index:1;max-width:480px;margin:0 auto;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.app{position:relative;z-index:1;max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
 header{padding:20px 24px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:rgba(13,17,23,.8);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100}
 .logo-group{display:flex;align-items:center;gap:12px}
 .brand{display:flex;flex-direction:column}
@@ -36,7 +36,7 @@ header{padding:20px 24px 16px;display:flex;align-items:center;justify-content:sp
 .brand-name span{color:var(--accent-bright)}
 .brand-tagline{font-size:10px;color:var(--muted);letter-spacing:.5px;margin-top:2px;text-transform:uppercase}
 .fssai-badge{font-size:9px;color:var(--muted);border:1px solid var(--border);padding:3px 8px;border-radius:20px;letter-spacing:.5px}
-main{flex:1;position:relative;overflow:hidden}
+main{flex:1;padding:24px 20px;display:flex;flex-direction:column;gap:20px}
 .scanner-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden}
 .scanner-area{aspect-ratio:4/3;background:var(--surface2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;position:relative;overflow:hidden;cursor:pointer}
 .scanner-area.has-image{background:#000}
@@ -217,127 +217,140 @@ footer{padding:16px 20px;text-align:center;font-size:11px;color:var(--border);bo
 .crop-handle-br{bottom:-4px;right:-4px;cursor:se-resize}
 .crop-actions{display:flex;gap:10px;padding:14px 16px;border-top:1px solid var(--border)}
 .crop-btn{flex:1;padding:12px;border-radius:12px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s}
-.crop-btn-skip{background:var(--surface2);color:var(--muted)}
-.crop-btn-skip:hover{color:var(--text)}
-.crop-btn-confirm{background:var(--accent);color:#fff}
-.crop-btn-confirm:hover{background:var(--accent-bright)}
+.crop-btn-skip{background:var(--surface2);color:var(--muted)}.crop-btn-skip:hover{color:var(--text)}
+.crop-btn-confirm{background:var(--accent);color:#fff}.crop-btn-confirm:hover{background:var(--accent-bright)}
 
 /* ── Data Notice ── */
-.data-notice{display:flex;align-items:flex-start;gap:8px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:4px}
+.data-notice{display:flex;align-items:flex-start;gap:8px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;font-size:11px;color:var(--muted);line-height:1.6}
 .data-notice svg{flex-shrink:0;margin-top:1px;opacity:.6}
-
-/* ── Splash ── */
-.splash{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;overflow-y:auto;padding:0 0 40px}
-.splash.hidden{display:none}
-.splash-header{padding:28px 24px 0;display:flex;align-items:center;gap:12px}
-.splash-logo{width:40px;height:40px;border-radius:10px;flex-shrink:0}
-.splash-brand{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--text)}
-.splash-brand span{color:var(--accent-bright)}
-.splash-hero{padding:40px 24px 32px}
-.splash-eyebrow{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--accent-bright);margin-bottom:16px}
-.splash-headline{font-family:'Syne',sans-serif;font-size:clamp(26px,7vw,34px);font-weight:800;color:var(--text);line-height:1.2;margin-bottom:20px}
-.splash-headline em{color:var(--accent-bright);font-style:normal}
-.splash-subhead{font-size:15px;font-weight:300;color:var(--muted);line-height:1.75}
-.splash-divider{width:40px;height:3px;background:var(--accent);border-radius:2px;margin:32px 24px}
-.splash-section{padding:0 24px;margin-bottom:32px}
-.splash-section-label{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--accent-bright);margin-bottom:14px}
-.splash-body{font-size:14px;font-weight:300;color:var(--muted);line-height:1.85}
-.splash-body strong{color:var(--text);font-weight:500}
-.splash-body p{margin-bottom:14px}
-.splash-body p:last-child{margin-bottom:0}
-.grade-row{display:flex;gap:8px;margin:16px 0}
-.grade-chip{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:10px;border:1px solid var(--border)}
-.grade-chip .gc-letter{font-family:'Syne',sans-serif;font-size:16px;font-weight:800}
-.grade-chip .gc-desc{font-size:9px;color:var(--muted);text-align:center;line-height:1.3}
-.grade-chip.ga{border-color:var(--grade-a);background:rgba(3,129,65,.08)}.grade-chip.ga .gc-letter{color:var(--grade-a)}
-.grade-chip.gb{border-color:var(--grade-b);background:rgba(133,187,47,.08)}.grade-chip.gb .gc-letter{color:var(--grade-b)}
-.grade-chip.gc{border-color:var(--grade-c);background:rgba(254,203,2,.08)}.grade-chip.gc .gc-letter{color:var(--grade-c)}
-.grade-chip.gd{border-color:var(--grade-d);background:rgba(238,129,0,.08)}.grade-chip.gd .gc-letter{color:var(--grade-d)}
-.grade-chip.ge{border-color:var(--grade-e);background:rgba(230,62,17,.08)}.grade-chip.ge .gc-letter{color:var(--grade-e)}
-.splash-closing{margin:0 24px;padding:20px;background:var(--surface);border:1px solid var(--border);border-radius:16px;border-left:3px solid var(--accent-bright)}
-.splash-closing p{font-size:13px;color:var(--muted);line-height:1.8;font-style:italic}
-.splash-closing p strong{color:var(--text);font-style:normal}
-.splash-cta{position:sticky;bottom:0;padding:20px 24px;background:linear-gradient(to top,var(--bg) 70%,transparent);margin-top:32px}
-.splash-btn{width:100%;padding:16px;background:var(--accent);color:#fff;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .2s}
-.splash-btn:hover{background:var(--accent-bright)}
-.splash-btn svg{transition:transform .2s}
-.splash-btn:hover svg{transform:translateX(3px)}
 
 /* ── Review accuracy note ── */
 .review-accuracy-note{display:flex;align-items:flex-start;gap:7px;padding:10px 16px;background:rgba(46,138,230,.07);border-bottom:1px solid var(--border);font-size:12px;color:var(--muted);line-height:1.6}
 .review-accuracy-note svg{flex-shrink:0;margin-top:1px;color:var(--accent-bright);opacity:.8}
 
-/* ══ SCREEN SYSTEM ══ */
-.app{position:relative;height:100vh;overflow:hidden;display:flex;flex-direction:column}
-header{flex-shrink:0;z-index:10}
-main{position:relative;flex:1;overflow:hidden}
-.screen{position:absolute;inset:0;display:none;flex-direction:column;opacity:0;transition:opacity .25s ease}
-.screen.active{display:flex;opacity:1}
-.screen-scroll{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;-webkit-overflow-scrolling:touch}
-.screen-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:16px}
+/* ── Splash Modal ── */
+.splash-modal{position:fixed;inset:0;z-index:999;display:flex;flex-direction:column;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.splash-modal.hidden{display:none}
+.splash-inner{max-width:480px;margin:0 auto;width:100%;padding:32px 24px 120px;display:flex;flex-direction:column;gap:28px}
+.splash-logo-row{display:flex;align-items:center;gap:12px}
+.splash-logo-img{width:40px;height:40px;border-radius:10px;flex-shrink:0}
+.splash-brand-name{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--text)}
+.splash-brand-name span{color:var(--accent-bright)}
+.splash-eyebrow{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--accent-bright)}
+.splash-headline{font-family:'Syne',sans-serif;font-size:clamp(22px,6vw,30px);font-weight:800;color:var(--text);line-height:1.25}
+.splash-headline em{color:var(--accent-bright);font-style:normal}
+.splash-divider{width:36px;height:3px;background:var(--accent);border-radius:2px}
+.splash-body{font-size:14px;font-weight:300;color:var(--muted);line-height:1.85;display:flex;flex-direction:column;gap:12px}
+.splash-body p{margin:0}
+.splash-grade-row{display:flex;gap:8px}
+.splash-grade-chip{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:10px;border:1px solid var(--border)}
+.splash-grade-chip .gc-letter{font-family:'Syne',sans-serif;font-size:16px;font-weight:800}
+.splash-grade-chip .gc-desc{font-size:9px;color:var(--muted);text-align:center}
+.splash-grade-chip.ga{border-color:var(--grade-a);background:rgba(3,129,65,.08)}.splash-grade-chip.ga .gc-letter{color:var(--grade-a)}
+.splash-grade-chip.gb{border-color:var(--grade-b);background:rgba(133,187,47,.08)}.splash-grade-chip.gb .gc-letter{color:var(--grade-b)}
+.splash-grade-chip.gc{border-color:var(--grade-c);background:rgba(254,203,2,.08)}.splash-grade-chip.gc .gc-letter{color:var(--grade-c)}
+.splash-grade-chip.gd{border-color:var(--grade-d);background:rgba(238,129,0,.08)}.splash-grade-chip.gd .gc-letter{color:var(--grade-d)}
+.splash-grade-chip.ge{border-color:var(--grade-e);background:rgba(230,62,17,.08)}.splash-grade-chip.ge .gc-letter{color:var(--grade-e)}
+.splash-closing{padding:16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:14px;border-left:3px solid var(--accent-bright);font-size:13px;color:var(--muted);line-height:1.8;font-style:italic}
+.splash-cta-fixed{position:fixed;bottom:0;left:0;right:0;padding:16px 24px 28px;background:linear-gradient(to top,var(--bg) 70%,transparent);z-index:1000}
+.splash-cta-inner{max-width:480px;margin:0 auto}
+.splash-btn{width:100%;padding:16px;background:var(--accent);color:#fff;border:none;border-radius:14px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .2s}
+.splash-btn:hover{background:var(--accent-bright)}
+.splash-btn svg{transition:transform .2s}
+.splash-btn:hover svg{transform:translateX(3px)}
 
-html,body{height:100%;margin:0}
+/* ══ FITMENT: no-scroll for scanner + processing + error screens ══ */
+
+/* Lock viewport */
+html { height: 100%; }
+body { height: 100%; overflow: hidden; min-height: unset; }
+.app { height: 100%; min-height: unset; overflow: hidden; }
+
+/* Header: tighter padding */
+header { padding: 12px 20px 10px; flex-shrink: 0; }
+
+/* Main: fills remaining space, no scroll */
+main {
+  flex: 1;
+  padding: 12px 16px;
+  gap: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scanner card: flex-grow to fill space, scanner-area uses remaining */
+.scanner-card { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.scanner-area {
+  aspect-ratio: unset !important;
+  flex: 1;
+  min-height: 0;
+}
+.scanner-actions { flex-shrink: 0; }
+
+/* Steps: more compact */
+.steps-row { margin-bottom: 8px; }
+.step-icon { width: 36px; height: 36px; }
+.step-label { font-size: 11px; }
+.step-desc { font-size: 9px; }
+.step-arrow { font-size: 16px; margin-top: 8px; }
+
+/* Analyse button: slightly tighter */
+.btn-analyse { padding: 12px; font-size: 14px; }
+
+/* Data notice: tighter */
+.data-notice { padding: 8px 12px; font-size: 10px; }
+
+/* Processing: centred, fills main */
+.processing-card {
+  flex: 1;
+  justify-content: center;
+}
+
+/* Error card: fills space */
+.error-card { flex: 1; justify-content: center; }
+
+/* Review + Result: allow scroll — override hidden */
+.review-card { overflow-y: auto; max-height: calc(100vh - 80px); }
+.result-card { overflow-y: auto; max-height: calc(100vh - 80px); }
+
+/* Compress notice: compact */
+.compress-notice { padding: 7px 12px; font-size: 10px; }
 </style>
 </head>
 <body>
-  <!-- SPLASH -->
-  <div class="splash" id="splash">
-    <div class="splash-header">
-      <img src="icon-192.png" class="splash-logo" alt="ScoreMyPack">
-      <div class="splash-brand">Score<span>MyPack</span></div>
-    </div>
-
-    <div class="splash-hero">
-      <div class="splash-eyebrow">A Thinking Lab Project</div>
-      <h1 class="splash-headline">We eat a lot of packaged food assuming it's safe.<br><em>Short term — probably fine. Long term, nobody's counting.</em></h1>
-    </div>
-
-    <div class="splash-divider"></div>
-
-    <div class="splash-section">
+  <!-- SPLASH MODAL -->
+  <div class="splash-modal" id="splash-modal">
+    <div class="splash-inner">
+      <div class="splash-logo-row">
+        <img src="icon-192.png" class="splash-logo-img" alt="ScoreMyPack">
+        <div class="splash-brand-name">Score<span>MyPack</span></div>
+      </div>
+      <div>
+        <div class="splash-eyebrow" style="margin-bottom:12px;">A Thinking Lab Project</div>
+        <h1 class="splash-headline">We eat a lot of packaged food assuming it's safe.<br><em>Short term — probably fine. Long term, nobody's counting.</em></h1>
+      </div>
+      <div class="splash-divider"></div>
       <div class="splash-body">
         <p>India mandates nutrition tables on every pack. Good start. But there's no instant signal — no single grade that tells you what you're actually holding.</p>
         <p>The EU has one. India doesn't. Yet.</p>
       </div>
+      <div class="splash-grade-row">
+        <div class="splash-grade-chip ga"><span class="gc-letter">A</span><span class="gc-desc">Excellent</span></div>
+        <div class="splash-grade-chip gb"><span class="gc-letter">B</span><span class="gc-desc">Good</span></div>
+        <div class="splash-grade-chip gc"><span class="gc-letter">C</span><span class="gc-desc">Average</span></div>
+        <div class="splash-grade-chip gd"><span class="gc-letter">D</span><span class="gc-desc">Below avg</span></div>
+        <div class="splash-grade-chip ge"><span class="gc-letter">E</span><span class="gc-desc">Poor</span></div>
+      </div>
+      <div class="splash-closing">This app exists until the government makes it unnecessary.</div>
     </div>
-
-    <div class="grade-row" style="padding:0 24px;">
-      <div class="grade-chip ga"><span class="gc-letter">A</span><span class="gc-desc">Excellent</span></div>
-      <div class="grade-chip gb"><span class="gc-letter">B</span><span class="gc-desc">Good</span></div>
-      <div class="grade-chip gc"><span class="gc-letter">C</span><span class="gc-desc">Average</span></div>
-      <div class="grade-chip gd"><span class="gc-letter">D</span><span class="gc-desc">Below avg</span></div>
-      <div class="grade-chip ge"><span class="gc-letter">E</span><span class="gc-desc">Poor</span></div>
-    </div>
-
-    <div class="splash-closing" style="margin-top:32px;">
-      <p>This app exists until the government makes it unnecessary.</p>
-    </div>
-
-    <div class="splash-cta">
-      <button class="splash-btn" onclick="enterApp()">
-        Scan a Label
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </button>
-    </div>
-  </div>
-
-    <div class="splash-hero">
-      <div class="splash-eyebrow">A Thinking Lab Project</div>
-      <h1 class="splash-headline">We read the label.<br>But do we <em>understand</em> it?</h1>
-      <p class="splash-subhead">A personal tool built around a simple question — is the packaged food I eat actually good for me?</p>
-    </div>
-
-    <div class="splash-divider"></div>
-
-    <div class="splash-closing">
-      <p>The goal of this app is to make itself <strong>redundant</strong>. The day India mandates a nutrition grade on every packed food wrapper — the way it mandates the green dot for veg — this app has done its job.</p>
-    </div>
-
-    <div class="splash-cta">
-      <button class="splash-btn" onclick="enterApp()">
-        Scan a Label
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </button>
+    <div class="splash-cta-fixed">
+      <div class="splash-cta-inner">
+        <button class="splash-btn" onclick="enterApp()">
+          Scan a Label
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -353,490 +366,183 @@ html,body{height:100%;margin:0}
     <div class="fssai-badge">India 🇮🇳</div>
   </header>
   <main>
+    <!-- Steps -->
+    <div class="steps-row">
+      <div class="step">
+        <div class="step-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
+        <div class="step-label">Photograph</div>
+        <div class="step-desc">Capture the nutrition table</div>
+      </div>
+      <div class="step-arrow">›</div>
+      <div class="step">
+        <div class="step-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+        <div class="step-label">Review</div>
+        <div class="step-desc">Verify extracted values</div>
+      </div>
+      <div class="step-arrow">›</div>
+      <div class="step">
+        <div class="step-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        <div class="step-label">Get Grade</div>
+        <div class="step-desc">Nutri-Score A to E</div>
+      </div>
+    </div>
 
-  <!-- ── SCREEN: SCANNER ── -->
-  <div class="screen screen-scanner active" id="screen-scanner">
-    <div class="screen-scroll">
-          <!-- Steps -->
-          <div class="steps-row">
-            <div class="step">
-              <div class="step-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-              </div>
-              <div class="step-label">Photograph</div>
-              <div class="step-desc">Capture the nutrition table</div>
-            </div>
-            <div class="step-arrow">›</div>
-            <div class="step">
-              <div class="step-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              </div>
-              <div class="step-label">Review</div>
-              <div class="step-desc">Verify extracted values</div>
-            </div>
-            <div class="step-arrow">›</div>
-            <div class="step">
-              <div class="step-icon">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-              </div>
-              <div class="step-label">Get Grade</div>
-              <div class="step-desc">Nutri-Score A to E</div>
-            </div>
+    <div class="scanner-card" id="scanner-card">
+      <div class="scanner-area" id="scanner-area" onclick="document.getElementById('upload-input').click()">
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+        <div class="scan-line"></div>
+        <img id="preview-img" alt="preview">
+        <div class="scan-placeholder">
+          <div class="viewfinder">
+            <div class="vf-corner vf-tl"></div><div class="vf-corner vf-tr"></div>
+            <div class="vf-corner vf-bl"></div><div class="vf-corner vf-br"></div>
+            <div class="vf-pulse"></div>
+            <div class="vf-inner"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></div>
           </div>
+          <div class="scan-text"><strong>Tap to photograph nutrition label</strong>Point camera at the nutrition table</div>
+        </div>
+      </div>
+      <div class="scanner-actions">
+        <button class="btn btn-camera" onclick="openCamera()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Camera
+        </button>
+        <button class="btn btn-upload" onclick="document.getElementById('upload-input').click()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Gallery
+        </button>
+      </div>
+    </div>
 
-      <div class="scanner-card" id="scanner-card">
-            <div class="scanner-area" id="scanner-area" onclick="document.getElementById('upload-input').click()">
-              <div class="corner tl"></div><div class="corner tr"></div>
-              <div class="corner bl"></div><div class="corner br"></div>
-              <div class="scan-line"></div>
-              <img id="preview-img" alt="preview">
-              <div class="scan-placeholder">
-                <div class="viewfinder">
-                  <div class="vf-corner vf-tl"></div><div class="vf-corner vf-tr"></div>
-                  <div class="vf-corner vf-bl"></div><div class="vf-corner vf-br"></div>
-                  <div class="vf-pulse"></div>
-                  <div class="vf-inner">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-                  </div>
-                </div>
-                <div class="scan-text"><strong>Tap to photograph nutrition label</strong>Point camera at the nutrition table</div>
-              </div>
-            </div>
-            <div class="scanner-actions">
-              <button class="btn btn-camera" onclick="openCamera()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>Camera
-              </button>
-              <button class="btn btn-upload" onclick="document.getElementById('upload-input').click()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Gallery
-              </button>
-            </div>
+    <!-- Crop -->
+    <div class="crop-modal" id="crop-modal">
+      <div class="crop-header">
+        <div class="crop-title">Select Nutrition Table</div>
+        <div class="crop-hint">Drag corners to fit the table</div>
+      </div>
+      <div class="crop-canvas-wrap" id="crop-canvas-wrap">
+        <img id="crop-img" alt="crop preview">
+        <canvas id="crop-canvas"></canvas>
+        <div class="crop-overlay" id="crop-overlay">
+          <div class="crop-box" id="crop-box">
+            <div class="crop-handle crop-handle-tl" data-handle="tl"></div>
+            <div class="crop-handle crop-handle-tr" data-handle="tr"></div>
+            <div class="crop-handle crop-handle-bl" data-handle="bl"></div>
+            <div class="crop-handle crop-handle-br" data-handle="br"></div>
+            <div class="crop-guideline crop-guideline-h1"></div>
+            <div class="crop-guideline crop-guideline-h2"></div>
+            <div class="crop-guideline crop-guideline-v1"></div>
+            <div class="crop-guideline crop-guideline-v2"></div>
           </div>
+        </div>
+      </div>
+      <div class="crop-actions">
+        <button class="crop-btn crop-btn-skip" onclick="cropSkip()">Use Full Image</button>
+        <button class="crop-btn crop-btn-confirm" onclick="cropConfirm()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Crop &amp; Analyse
+        </button>
+      </div>
+    </div>
 
-          <!-- Crop selection overlay -->
-          <div class="crop-modal" id="crop-modal">
-            <div class="crop-header">
-              <div class="crop-title">Select Nutrition Table</div>
-              <div class="crop-hint">Drag corners to fit the table</div>
-            </div>
-            <div class="crop-canvas-wrap" id="crop-canvas-wrap">
-              <img id="crop-img" alt="crop preview">
-              <canvas id="crop-canvas"></canvas>
-              <div class="crop-overlay" id="crop-overlay">
-                <div class="crop-box" id="crop-box">
-                  <div class="crop-handle crop-handle-tl" data-handle="tl"></div>
-                  <div class="crop-handle crop-handle-tr" data-handle="tr"></div>
-                  <div class="crop-handle crop-handle-bl" data-handle="bl"></div>
-                  <div class="crop-handle crop-handle-br" data-handle="br"></div>
-                  <div class="crop-guideline crop-guideline-h1"></div>
-                  <div class="crop-guideline crop-guideline-h2"></div>
-                  <div class="crop-guideline crop-guideline-v1"></div>
-                  <div class="crop-guideline crop-guideline-v2"></div>
-                </div>
-              </div>
-            </div>
-            <div class="crop-actions">
-              <button class="crop-btn crop-btn-skip" onclick="cropSkip()">Use Full Image</button>
-              <button class="crop-btn crop-btn-confirm" onclick="cropConfirm()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                Crop &amp; Analyse
-              </button>
-            </div>
-          </div>
+    <div class="compress-notice" id="compress-notice">
+      <div class="compress-dot"></div><span>Large image — optimising…</span>
+    </div>
 
-          <div class="compress-notice" id="compress-notice">
-            <div class="compress-dot"></div><span>Large image — optimising…</span>
-          </div>
-
-          <button class="btn-analyse" id="analyse-btn" disabled onclick="analyseImage()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            Analyse Nutrition Label
-          </button>
-
-          <!-- Data notice -->
-          <div class="data-notice">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span>Images you capture are retained to improve ScoreMyPack's accuracy. By using this app you consent to this. No personal data is collected.</span>
-          </div>
-
-          <div class="processing-card" id="processing-card">
-            <div class="spinner"></div>
-            <div class="processing-text" id="proc-text">Loading OCR…</div>
-            <div class="processing-sub" id="proc-sub">First use downloads ~3MB</div>
-            <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
-          </div>
-
-          <div class="review-card" id="review-card">
-            <div class="review-header">
-              <div>
-                <div class="review-title">Review Values</div>
-                <div class="review-sub"><span style="color:#E63E11">Red</span> = not found — enter from your pack. Edit either column.</div>
-              </div>
-              <div class="ocr-conf" id="ocr-conf">–</div>
-            </div>
-            <div class="review-accuracy-note">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              These values were read from your image. Give them a quick check before scoring.
-            </div>
-            <!-- Editable portion size -->
-            <div class="portion-row">
-              <span class="portion-label">Portion size on pack</span>
-              <input class="portion-input" type="number" id="portion-size" min="1" max="500" step="1" inputmode="decimal" onchange="onPortionChange()">
-              <span class="portion-unit">g</span>
-              <span class="portion-same" id="portion-same-note"></span>
-            </div>
-            <!-- Two-column field table -->
-            <div class="field-table">
-              <div class="field-table-head">
-                <div class="col-head col-name">Nutrient</div>
-                <div class="col-head" id="col-head-serving">Per serving</div>
-                <div class="col-head">Per 100g <span style="font-size:9px;opacity:.6">(auto)</span></div>
-              </div>
-              <div id="review-fields"></div>
-            </div>
-            <div class="review-actions">
-              <div class="review-note" id="review-note"></div>
-              <button class="btn-calc" onclick="calculateFromForm()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:6px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                Calculate Nutri-Score
-              </button>
-              <button class="btn-rescan-sm" onclick="resetApp()">↩ Scan a Different Label</button>
-            </div>
-          </div>
-
-          <div class="error-card" id="error-card">
-            <div class="error-title">Couldn't Read Label</div>
-            <div class="error-msg" id="error-msg">Please try with a clearer, well-lit photo.</div>
-            <button class="btn btn-upload" style="flex:none;padding:10px 20px" onclick="resetApp()">Try Again</button>
-          </div>
-
-          <div class="result-card" id="result-card">
-            <div class="result-header">
-              <div>
-                <div class="product-label">Nutri-Score Result</div>
-                <div class="product-name" id="result-name">Analysed Product</div>
-              </div>
-              <div class="grade-badge" id="grade-badge">–</div>
-            </div>
-            <div class="grade-bar">
-              <div class="grade-pill pill-A" id="pill-A">A</div><div class="grade-pill pill-B" id="pill-B">B</div>
-              <div class="grade-pill pill-C" id="pill-C">C</div><div class="grade-pill pill-D" id="pill-D">D</div>
-              <div class="grade-pill pill-E" id="pill-E">E</div>
-            </div>
-            <div class="nutrients-section">
-              <div class="section-title" id="result-section-title">Nutritional Values</div>
-              <div id="nutrient-grid"></div>
-            </div>
-            <div class="score-section">
-              <div class="section-title">Score Breakdown</div>
-              <div class="score-row"><span class="score-label">Negative points (energy, fat, sugar, sodium)</span><span class="score-val bad" id="bad-pts">–</span></div>
-              <div class="score-row"><span class="score-label">Positive points (protein, fibre, fruits/veg)</span><span class="score-val good" id="good-pts">–</span></div>
-              <div class="score-divider"></div>
-              <div class="score-row"><span class="score-label" style="font-weight:500;color:var(--text)">Final Score</span><span class="score-val total" id="final-score">–</span></div>
-            </div>
-            <div class="verdict-section">
-              <div class="section-title">Verdict</div>
-              <div class="verdict-box" id="verdict-box"></div>
-              <div class="tips" id="tips-list"></div>
-            </div>
-          </div>
-
-          <button class="rescan-btn" id="rescan-btn" onclick="resetApp()">↩ Scan Another Product</button>
-        </main>
-
-      <div class="crop-modal" id="crop-modal">
-            <div class="crop-header">
-              <div class="crop-title">Select Nutrition Table</div>
-              <div class="crop-hint">Drag corners to fit the table</div>
-            </div>
-            <div class="crop-canvas-wrap" id="crop-canvas-wrap">
-              <img id="crop-img" alt="crop preview">
-              <canvas id="crop-canvas"></canvas>
-              <div class="crop-overlay" id="crop-overlay">
-                <div class="crop-box" id="crop-box">
-                  <div class="crop-handle crop-handle-tl" data-handle="tl"></div>
-                  <div class="crop-handle crop-handle-tr" data-handle="tr"></div>
-                  <div class="crop-handle crop-handle-bl" data-handle="bl"></div>
-                  <div class="crop-handle crop-handle-br" data-handle="br"></div>
-                  <div class="crop-guideline crop-guideline-h1"></div>
-                  <div class="crop-guideline crop-guideline-h2"></div>
-                  <div class="crop-guideline crop-guideline-v1"></div>
-                  <div class="crop-guideline crop-guideline-v2"></div>
-                </div>
-              </div>
-            </div>
-            <div class="crop-actions">
-              <button class="crop-btn crop-btn-skip" onclick="cropSkip()">Use Full Image</button>
-              <button class="crop-btn crop-btn-confirm" onclick="cropConfirm()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                Crop &amp; Analyse
-              </button>
-            </div>
-          </div>
-
-          <div class="compress-notice" id="compress-notice">
-            <div class="compress-dot"></div><span>Large image — optimising…</span>
-          </div>
-
-          <button class="btn-analyse" id="analyse-btn" disabled onclick="analyseImage()">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            Analyse Nutrition Label
-          </button>
-
-          <!-- Data notice -->
-          <div class="data-notice">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span>Images you capture are retained to improve ScoreMyPack's accuracy. By using this app you consent to this. No personal data is collected.</span>
-          </div>
-
-          <div class="processing-card" id="processing-card">
-            <div class="spinner"></div>
-            <div class="processing-text" id="proc-text">Loading OCR…</div>
-            <div class="processing-sub" id="proc-sub">First use downloads ~3MB</div>
-            <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
-          </div>
-
-          <div class="review-card" id="review-card">
-            <div class="review-header">
-              <div>
-                <div class="review-title">Review Values</div>
-                <div class="review-sub"><span style="color:#E63E11">Red</span> = not found — enter from your pack. Edit either column.</div>
-              </div>
-              <div class="ocr-conf" id="ocr-conf">–</div>
-            </div>
-            <div class="review-accuracy-note">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              These values were read from your image. Give them a quick check before scoring.
-            </div>
-            <!-- Editable portion size -->
-            <div class="portion-row">
-              <span class="portion-label">Portion size on pack</span>
-              <input class="portion-input" type="number" id="portion-size" min="1" max="500" step="1" inputmode="decimal" onchange="onPortionChange()">
-              <span class="portion-unit">g</span>
-              <span class="portion-same" id="portion-same-note"></span>
-            </div>
-            <!-- Two-column field table -->
-            <div class="field-table">
-              <div class="field-table-head">
-                <div class="col-head col-name">Nutrient</div>
-                <div class="col-head" id="col-head-serving">Per serving</div>
-                <div class="col-head">Per 100g <span style="font-size:9px;opacity:.6">(auto)</span></div>
-              </div>
-              <div id="review-fields"></div>
-            </div>
-            <div class="review-actions">
-              <div class="review-note" id="review-note"></div>
-              <button class="btn-calc" onclick="calculateFromForm()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:6px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                Calculate Nutri-Score
-              </button>
-              <button class="btn-rescan-sm" onclick="resetApp()">↩ Scan a Different Label</button>
-            </div>
-          </div>
-
-          <div class="error-card" id="error-card">
-            <div class="error-title">Couldn't Read Label</div>
-            <div class="error-msg" id="error-msg">Please try with a clearer, well-lit photo.</div>
-            <button class="btn btn-upload" style="flex:none;padding:10px 20px" onclick="resetApp()">Try Again</button>
-          </div>
-
-          <div class="result-card" id="result-card">
-            <div class="result-header">
-              <div>
-                <div class="product-label">Nutri-Score Result</div>
-                <div class="product-name" id="result-name">Analysed Product</div>
-              </div>
-              <div class="grade-badge" id="grade-badge">–</div>
-            </div>
-            <div class="grade-bar">
-              <div class="grade-pill pill-A" id="pill-A">A</div><div class="grade-pill pill-B" id="pill-B">B</div>
-              <div class="grade-pill pill-C" id="pill-C">C</div><div class="grade-pill pill-D" id="pill-D">D</div>
-              <div class="grade-pill pill-E" id="pill-E">E</div>
-            </div>
-            <div class="nutrients-section">
-              <div class="section-title" id="result-section-title">Nutritional Values</div>
-              <div id="nutrient-grid"></div>
-            </div>
-            <div class="score-section">
-              <div class="section-title">Score Breakdown</div>
-              <div class="score-row"><span class="score-label">Negative points (energy, fat, sugar, sodium)</span><span class="score-val bad" id="bad-pts">–</span></div>
-              <div class="score-row"><span class="score-label">Positive points (protein, fibre, fruits/veg)</span><span class="score-val good" id="good-pts">–</span></div>
-              <div class="score-divider"></div>
-              <div class="score-row"><span class="score-label" style="font-weight:500;color:var(--text)">Final Score</span><span class="score-val total" id="final-score">–</span></div>
-            </div>
-            <div class="verdict-section">
-              <div class="section-title">Verdict</div>
-              <div class="verdict-box" id="verdict-box"></div>
-              <div class="tips" id="tips-list"></div>
-            </div>
-          </div>
-
-          <button class="rescan-btn" id="rescan-btn" onclick="resetApp()">↩ Scan Another Product</button>
-        </main>
-
-      <div class="compress-notice" id="compress-notice">
-            <div class="compress-dot"></div><span>Large image — optimising…</span>
-          </div>
-
-      <button class="btn-analyse" id="analyse-btn" disabled onclick="analyseImage()">
+    <button class="btn-analyse" id="analyse-btn" disabled onclick="analyseImage()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
       Analyse Nutrition Label
     </button>
 
-      <!-- Data notice -->
-          <div class="data-notice">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            <span>Images you capture are retained to improve ScoreMyPack's accuracy. By using this app you consent to this. No personal data is collected.</span>
-          </div>
+    <!-- Data notice -->
+    <div class="data-notice">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>Images you capture are retained to improve ScoreMyPack's accuracy. By using this app you consent to this. No personal data is collected.</span>
     </div>
-  </div>
 
-  <!-- ── SCREEN: PROCESSING ── -->
-  <div class="screen screen-processing" id="screen-processing">
-    <div class="screen-center">
-      <div class="processing-card" id="processing-card">
-            <div class="spinner"></div>
-            <div class="processing-text" id="proc-text">Loading OCR…</div>
-            <div class="processing-sub" id="proc-sub">First use downloads ~3MB</div>
-            <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
-          </div>
+    <div class="processing-card" id="processing-card">
+      <div class="spinner"></div>
+      <div class="processing-text" id="proc-text">Loading OCR…</div>
+      <div class="processing-sub" id="proc-sub">First use downloads ~3MB</div>
+      <div class="progress-bar"><div class="progress-fill" id="prog-fill"></div></div>
     </div>
-  </div>
 
-  <!-- ── SCREEN: REVIEW ── -->
-  <div class="screen screen-review" id="screen-review">
-    <div class="screen-scroll">
-      <div class="review-card" id="review-card">
-            <div class="review-header">
-              <div>
-                <div class="review-title">Review Values</div>
-                <div class="review-sub"><span style="color:#E63E11">Red</span> = not found — enter from your pack. Edit either column.</div>
-              </div>
-              <div class="ocr-conf" id="ocr-conf">–</div>
-            </div>
-            <div class="review-accuracy-note">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              These values were read from your image. Give them a quick check before scoring.
-            </div>
-            <!-- Editable portion size -->
-            <div class="portion-row">
-              <span class="portion-label">Portion size on pack</span>
-              <input class="portion-input" type="number" id="portion-size" min="1" max="500" step="1" inputmode="decimal" onchange="onPortionChange()">
-              <span class="portion-unit">g</span>
-              <span class="portion-same" id="portion-same-note"></span>
-            </div>
-            <!-- Two-column field table -->
-            <div class="field-table">
-              <div class="field-table-head">
-                <div class="col-head col-name">Nutrient</div>
-                <div class="col-head" id="col-head-serving">Per serving</div>
-                <div class="col-head">Per 100g <span style="font-size:9px;opacity:.6">(auto)</span></div>
-              </div>
-              <div id="review-fields"></div>
-            </div>
-            <div class="review-actions">
-              <div class="review-note" id="review-note"></div>
-              <button class="btn-calc" onclick="calculateFromForm()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:6px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                Calculate Nutri-Score
-              </button>
-              <button class="btn-rescan-sm" onclick="resetApp()">↩ Scan a Different Label</button>
-            </div>
-          </div>
-
-          <div class="error-card" id="error-card">
-            <div class="error-title">Couldn't Read Label</div>
-            <div class="error-msg" id="error-msg">Please try with a clearer, well-lit photo.</div>
-            <button class="btn btn-upload" style="flex:none;padding:10px 20px" onclick="resetApp()">Try Again</button>
-          </div>
-
-          <div class="result-card" id="result-card">
-            <div class="result-header">
-              <div>
-                <div class="product-label">Nutri-Score Result</div>
-                <div class="product-name" id="result-name">Analysed Product</div>
-              </div>
-              <div class="grade-badge" id="grade-badge">–</div>
-            </div>
-            <div class="grade-bar">
-              <div class="grade-pill pill-A" id="pill-A">A</div><div class="grade-pill pill-B" id="pill-B">B</div>
-              <div class="grade-pill pill-C" id="pill-C">C</div><div class="grade-pill pill-D" id="pill-D">D</div>
-              <div class="grade-pill pill-E" id="pill-E">E</div>
-            </div>
-            <div class="nutrients-section">
-              <div class="section-title" id="result-section-title">Nutritional Values</div>
-              <div id="nutrient-grid"></div>
-            </div>
-            <div class="score-section">
-              <div class="section-title">Score Breakdown</div>
-              <div class="score-row"><span class="score-label">Negative points (energy, fat, sugar, sodium)</span><span class="score-val bad" id="bad-pts">–</span></div>
-              <div class="score-row"><span class="score-label">Positive points (protein, fibre, fruits/veg)</span><span class="score-val good" id="good-pts">–</span></div>
-              <div class="score-divider"></div>
-              <div class="score-row"><span class="score-label" style="font-weight:500;color:var(--text)">Final Score</span><span class="score-val total" id="final-score">–</span></div>
-            </div>
-            <div class="verdict-section">
-              <div class="section-title">Verdict</div>
-              <div class="verdict-box" id="verdict-box"></div>
-              <div class="tips" id="tips-list"></div>
-            </div>
-          </div>
-
-          <button class="rescan-btn" id="rescan-btn" onclick="resetApp()">↩ Scan Another Product</button>
-        </main>
+    <div class="review-card" id="review-card">
+      <div class="review-header">
+        <div>
+          <div class="review-title">Review Values</div>
+          <div class="review-sub"><span style="color:#E63E11">Red</span> = not found — enter from your pack. Edit either column.</div>
+        </div>
+        <div class="ocr-conf" id="ocr-conf">–</div>
+      </div>
+      <div class="review-accuracy-note">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        These values were read from your image. Give them a quick check before scoring.
+      </div>
+      <!-- Editable portion size -->
+      <div class="portion-row">
+        <span class="portion-label">Portion size on pack</span>
+        <input class="portion-input" type="number" id="portion-size" min="1" max="500" step="1" inputmode="decimal" onchange="onPortionChange()">
+        <span class="portion-unit">g</span>
+        <span class="portion-same" id="portion-same-note"></span>
+      </div>
+      <!-- Two-column field table -->
+      <div class="field-table">
+        <div class="field-table-head">
+          <div class="col-head col-name">Nutrient</div>
+          <div class="col-head" id="col-head-serving">Per serving</div>
+          <div class="col-head">Per 100g <span style="font-size:9px;opacity:.6">(auto)</span></div>
+        </div>
+        <div id="review-fields"></div>
+      </div>
+      <div class="review-actions">
+        <div class="review-note" id="review-note"></div>
+        <button class="btn-calc" onclick="calculateFromForm()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:6px"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Calculate Nutri-Score
+        </button>
+        <button class="btn-rescan-sm" onclick="resetApp()">↩ Scan a Different Label</button>
+      </div>
     </div>
-  </div>
 
-  <!-- ── SCREEN: RESULT ── -->
-  <div class="screen screen-result" id="screen-result">
-    <div class="screen-scroll">
-      <div class="result-card" id="result-card">
-            <div class="result-header">
-              <div>
-                <div class="product-label">Nutri-Score Result</div>
-                <div class="product-name" id="result-name">Analysed Product</div>
-              </div>
-              <div class="grade-badge" id="grade-badge">–</div>
-            </div>
-            <div class="grade-bar">
-              <div class="grade-pill pill-A" id="pill-A">A</div><div class="grade-pill pill-B" id="pill-B">B</div>
-              <div class="grade-pill pill-C" id="pill-C">C</div><div class="grade-pill pill-D" id="pill-D">D</div>
-              <div class="grade-pill pill-E" id="pill-E">E</div>
-            </div>
-            <div class="nutrients-section">
-              <div class="section-title" id="result-section-title">Nutritional Values</div>
-              <div id="nutrient-grid"></div>
-            </div>
-            <div class="score-section">
-              <div class="section-title">Score Breakdown</div>
-              <div class="score-row"><span class="score-label">Negative points (energy, fat, sugar, sodium)</span><span class="score-val bad" id="bad-pts">–</span></div>
-              <div class="score-row"><span class="score-label">Positive points (protein, fibre, fruits/veg)</span><span class="score-val good" id="good-pts">–</span></div>
-              <div class="score-divider"></div>
-              <div class="score-row"><span class="score-label" style="font-weight:500;color:var(--text)">Final Score</span><span class="score-val total" id="final-score">–</span></div>
-            </div>
-            <div class="verdict-section">
-              <div class="section-title">Verdict</div>
-              <div class="verdict-box" id="verdict-box"></div>
-              <div class="tips" id="tips-list"></div>
-            </div>
-          </div>
-
-      <button class="rescan-btn" id="rescan-btn" onclick="resetApp()">↩ Scan Another Product</button>
+    <div class="error-card" id="error-card">
+      <div class="error-title">Couldn't Read Label</div>
+      <div class="error-msg" id="error-msg">Please try with a clearer, well-lit photo.</div>
+      <button class="btn btn-upload" style="flex:none;padding:10px 20px" onclick="resetApp()">Try Again</button>
     </div>
-  </div>
 
-  <!-- ── SCREEN: ERROR ── -->
-  <div class="screen screen-error" id="screen-error">
-    <div class="screen-center">
-      <div class="error-card" id="error-card">
-            <div class="error-title">Couldn't Read Label</div>
-            <div class="error-msg" id="error-msg">Please try with a clearer, well-lit photo.</div>
-            <button class="btn btn-upload" style="flex:none;padding:10px 20px" onclick="resetApp()">Try Again</button>
-          </div>
-      <button class="btn-rescan-sm" onclick="showScreen('screen-scanner');resetApp()">↩ Try Again</button>
+    <div class="result-card" id="result-card">
+      <div class="result-header">
+        <div>
+          <div class="product-label">Nutri-Score Result</div>
+          <div class="product-name" id="result-name">Analysed Product</div>
+        </div>
+        <div class="grade-badge" id="grade-badge">–</div>
+      </div>
+      <div class="grade-bar">
+        <div class="grade-pill pill-A" id="pill-A">A</div><div class="grade-pill pill-B" id="pill-B">B</div>
+        <div class="grade-pill pill-C" id="pill-C">C</div><div class="grade-pill pill-D" id="pill-D">D</div>
+        <div class="grade-pill pill-E" id="pill-E">E</div>
+      </div>
+      <div class="nutrients-section">
+        <div class="section-title" id="result-section-title">Nutritional Values</div>
+        <div id="nutrient-grid"></div>
+      </div>
+      <div class="score-section">
+        <div class="section-title">Score Breakdown</div>
+        <div class="score-row"><span class="score-label">Negative points (energy, fat, sugar, sodium)</span><span class="score-val bad" id="bad-pts">–</span></div>
+        <div class="score-row"><span class="score-label">Positive points (protein, fibre, fruits/veg)</span><span class="score-val good" id="good-pts">–</span></div>
+        <div class="score-divider"></div>
+        <div class="score-row"><span class="score-label" style="font-weight:500;color:var(--text)">Final Score</span><span class="score-val total" id="final-score">–</span></div>
+      </div>
+      <div class="verdict-section">
+        <div class="section-title">Verdict</div>
+        <div class="verdict-box" id="verdict-box"></div>
+        <div class="tips" id="tips-list"></div>
+      </div>
     </div>
-  </div>
 
-</main>
-
+    <button class="rescan-btn" id="rescan-btn" onclick="resetApp()">↩ Scan Another Product</button>
+  </main>
   <footer>ScoreMyPack • Nutri-Score v2 • Tesseract OCR • Thinking Lab</footer>
 </div>
 <input type="file" id="camera-input" accept="image/*" capture="environment" onchange="handleImage(this)">
@@ -1373,7 +1079,7 @@ function setProgress(pct,text,sub){
   if(sub!==undefined)document.getElementById('proc-sub').textContent=sub;
 }
 function hideAll(){['result-card','error-card','review-card','rescan-btn'].forEach(id=>document.getElementById(id).classList.remove('active'));}
-function showError(msg){document.getElementById('error-msg').textContent=msg;showScreen('screen-error');}
+function showError(msg){document.getElementById('error-msg').textContent=msg;document.getElementById('error-card').classList.add('active');document.getElementById('rescan-btn').classList.add('active');}
 
 // ═══════════════════════════════════════════════════════════════════
 //  REVIEW CARD  v3
@@ -1506,7 +1212,7 @@ function showReviewCard(nutrition){
   _reviewNutrition = nutrition;
   ph('review_shown',{fields_found:cf.found,fields_missing:cf.total-cf.found,ocr_pct:pct,portion_g:_portionG});
 
-  showScreen('screen-review');
+  document.getElementById('review-card').classList.add('active');
   document.getElementById('review-card').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
@@ -1546,7 +1252,10 @@ function trackFieldEdit(fieldKey, newVal, wasEmpty){
 // ═══════════════════════════════════════════════════════════════════
 async function analyseImage(){
   if(!imgDataUrl)return;
-  showScreen('screen-processing');
+  document.getElementById('analyse-btn').style.display='none';
+  document.getElementById('scanner-card').style.display='none';
+  document.getElementById('compress-notice').classList.remove('active');
+  document.getElementById('processing-card').classList.add('active');
   hideAll();
   setProgress(5,'Loading OCR engine…','First use downloads ~3MB');
   try{await loadTesseract();}catch(e){document.getElementById('processing-card').classList.remove('active');showError('Could not load OCR engine. Please check your internet connection.');resetApp();return;}
@@ -1630,7 +1339,8 @@ function showResult(r){
   document.getElementById('verdict-box').textContent=r.verdict;
   const tips=[...(r.strengths||[]).map(s=>({text:s,good:true})),...(r.concerns||[]).map(c=>({text:c,good:false}))];
   document.getElementById('tips-list').innerHTML=tips.map(t=>`<div class="tip"><div class="tip-dot ${t.good?'tip-green':'tip-orange'}"></div><span>${t.text}</span></div>`).join('');
-  showScreen('screen-result');
+  document.getElementById('result-card').classList.add('active');
+  document.getElementById('rescan-btn').classList.add('active');
   document.getElementById('result-card').scrollIntoView({behavior:'smooth',block:'start'});
 }
 function resetApp(){
@@ -1638,87 +1348,56 @@ function resetApp(){
   document.getElementById('preview-img').src='';
   document.getElementById('scanner-area').classList.remove('has-image');
   document.getElementById('analyse-btn').disabled=true;
-  document.getElementById('crop-modal').classList.remove('active');
+  document.getElementById('analyse-btn').style.display='';
+  document.getElementById('scanner-card').style.display='';
+  document.getElementById('processing-card').classList.remove('active');
   document.getElementById('compress-notice').classList.remove('active');
-  showScreen('screen-scanner');
+  document.getElementById('crop-modal').classList.remove('active');
+  hideAll();window.scrollTo({top:0,behavior:'smooth'});
 }
 
 
 /* ── Crop Tool ── */
 let _cropBox={x:10,y:10,w:80,h:80};
-let _cropDragging=null;
-let _cropDragStart=null;
-let _cropImgNatural={w:0,h:0};
-
+let _cropDragging=null,_cropDragStart=null,_cropImgNatural={w:0,h:0};
 function showCropTool(dataUrl){
   const modal=document.getElementById('crop-modal');
   const img=document.getElementById('crop-img');
   img.src=dataUrl;
   img.onload=function(){
     _cropImgNatural={w:img.naturalWidth,h:img.naturalHeight};
-    // Default box: 10% inset
     _cropBox={x:10,y:10,w:80,h:80};
-    renderCropBox();
-    modal.classList.add('active');
+    renderCropBox();modal.classList.add('active');
     modal.scrollIntoView({behavior:'smooth',block:'center'});
     initCropDrag();
   };
 }
-
 function renderCropBox(){
   const box=document.getElementById('crop-box');
-  box.style.left=_cropBox.x+'%';
-  box.style.top=_cropBox.y+'%';
-  box.style.width=_cropBox.w+'%';
-  box.style.height=_cropBox.h+'%';
+  box.style.left=_cropBox.x+'%';box.style.top=_cropBox.y+'%';
+  box.style.width=_cropBox.w+'%';box.style.height=_cropBox.h+'%';
 }
-
 function initCropDrag(){
   const wrap=document.getElementById('crop-canvas-wrap');
   const box=document.getElementById('crop-box');
-
   function getRelPos(e,el){
     const r=el.getBoundingClientRect();
-    const clientX=e.touches?e.touches[0].clientX:e.clientX;
-    const clientY=e.touches?e.touches[0].clientY:e.clientY;
-    return{x:(clientX-r.left)/r.width*100,y:(clientY-r.top)/r.height*100};
+    const cx=e.touches?e.touches[0].clientX:e.clientX;
+    const cy=e.touches?e.touches[0].clientY:e.clientY;
+    return{x:(cx-r.left)/r.width*100,y:(cy-r.top)/r.height*100};
   }
-
-  // Handle drag
   document.querySelectorAll('.crop-handle').forEach(h=>{
-    const startDrag=e=>{
-      e.preventDefault();e.stopPropagation();
-      _cropDragging=h.dataset.handle;
-      const pos=getRelPos(e,wrap);
-      _cropDragStart={...pos,box:{..._cropBox}};
-    };
-    h.addEventListener('mousedown',startDrag);
-    h.addEventListener('touchstart',startDrag,{passive:false});
+    const start=e=>{e.preventDefault();e.stopPropagation();_cropDragging=h.dataset.handle;const p=getRelPos(e,wrap);_cropDragStart={...p,box:{..._cropBox}};};
+    h.addEventListener('mousedown',start);h.addEventListener('touchstart',start,{passive:false});
   });
-
-  // Box move
-  const startMove=e=>{
-    if(e.target.classList.contains('crop-handle'))return;
-    e.preventDefault();
-    _cropDragging='move';
-    const pos=getRelPos(e,wrap);
-    _cropDragStart={...pos,box:{..._cropBox}};
-  };
-  box.addEventListener('mousedown',startMove);
-  box.addEventListener('touchstart',startMove,{passive:false});
-
+  const startMove=e=>{if(e.target.classList.contains('crop-handle'))return;e.preventDefault();_cropDragging='move';const p=getRelPos(e,wrap);_cropDragStart={...p,box:{..._cropBox}};};
+  box.addEventListener('mousedown',startMove);box.addEventListener('touchstart',startMove,{passive:false});
   const onMove=e=>{
-    if(!_cropDragging)return;
-    e.preventDefault();
-    const pos=getRelPos(e,wrap);
-    const dx=pos.x-_cropDragStart.x;
-    const dy=pos.y-_cropDragStart.y;
-    const b={..._cropDragStart.box};
-    const MIN=8;
-    if(_cropDragging==='move'){
-      b.x=Math.max(0,Math.min(100-b.w,b.x+dx));
-      b.y=Math.max(0,Math.min(100-b.h,b.y+dy));
-    } else {
+    if(!_cropDragging)return;e.preventDefault();
+    const p=getRelPos(e,wrap);const dx=p.x-_cropDragStart.x,dy=p.y-_cropDragStart.y;
+    const b={..._cropDragStart.box};const MIN=8;
+    if(_cropDragging==='move'){b.x=Math.max(0,Math.min(100-b.w,b.x+dx));b.y=Math.max(0,Math.min(100-b.h,b.y+dy));}
+    else{
       if(_cropDragging.includes('r'))b.w=Math.max(MIN,Math.min(100-b.x,b.w+dx));
       if(_cropDragging.includes('b'))b.h=Math.max(MIN,Math.min(100-b.y,b.h+dy));
       if(_cropDragging.includes('l')){const nw=Math.max(MIN,b.w-dx);b.x=b.x+b.w-nw;b.w=nw;}
@@ -1727,18 +1406,14 @@ function initCropDrag(){
     _cropBox=b;renderCropBox();
   };
   const onEnd=()=>{_cropDragging=null;_cropDragStart=null;};
-  document.addEventListener('mousemove',onMove);
-  document.addEventListener('touchmove',onMove,{passive:false});
-  document.addEventListener('mouseup',onEnd);
-  document.addEventListener('touchend',onEnd);
+  document.addEventListener('mousemove',onMove);document.addEventListener('touchmove',onMove,{passive:false});
+  document.addEventListener('mouseup',onEnd);document.addEventListener('touchend',onEnd);
 }
-
 function cropSkip(){
   document.getElementById('crop-modal').classList.remove('active');
   document.getElementById('analyse-btn').disabled=false;
   document.getElementById('analyse-btn').style.display='';
 }
-
 function cropConfirm(){
   const img=document.getElementById('crop-img');
   const canvas=document.getElementById('crop-canvas');
@@ -1749,41 +1424,22 @@ function cropConfirm(){
   canvas.width=sw;canvas.height=sh;
   ctx.drawImage(img,sx,sy,sw,sh,0,0,sw,sh);
   imgDataUrl=canvas.toDataURL('image/jpeg',0.92);
-  // Update preview
   document.getElementById('preview-img').src=imgDataUrl;
   document.getElementById('crop-modal').classList.remove('active');
   document.getElementById('analyse-btn').disabled=false;
   document.getElementById('analyse-btn').style.display='';
 }
 
-</script>
-<script>
 
-/* ── Splash ── */
+/* ── Splash Modal ── */
 function enterApp(){
-  document.getElementById('splash').classList.add('hidden');
-  sessionStorage.setItem('smp_intro_seen','1');
+  document.getElementById('splash-modal').classList.add('hidden');
+  sessionStorage.setItem('smp_seen','1');
 }
-// Only show once per session
-if(sessionStorage.getItem('smp_intro_seen')){
-  document.getElementById('splash').classList.add('hidden');
+if(sessionStorage.getItem('smp_seen')){
+  document.getElementById('splash-modal').classList.add('hidden');
 }
 
-
-
-/* ── Screen Manager ── */
-function showScreen(id){
-  document.querySelectorAll('.screen').forEach(s=>{
-    s.classList.remove('active');
-  });
-  const target = document.getElementById(id);
-  if(target){
-    target.classList.add('active');
-    // Scroll to top of scrollable screens
-    const scroll = target.querySelector('.screen-scroll');
-    if(scroll) scroll.scrollTop = 0;
-  }
-}
 </script>
 <script>
 if('serviceWorker' in navigator&&location.hostname!=='www.claudeusercontent.com'){
