@@ -810,7 +810,7 @@ function scoreOcrText(text){
 function buildPreprocessedVersions(imgData,w,h){
   const grey=toGrey(imgData,w,h);
   const dark=isDarkBackground(grey,w,h);
-  // If dark bg (white text on dark), invert first
+  console.log('[ScoreMyPack] Dark background detected:',dark,'Image:',w+'x'+h);
   const workGrey=dark?invertGrey(grey):grey;
   const region=detectLabelRegion(workGrey,w,h);
   const versions=[];
@@ -924,7 +924,10 @@ function prepareImage(dataUrl){
       w=canvas.width;h=canvas.height;
       ctx=canvas.getContext('2d');
       const imgData=ctx.getImageData(0,0,w,h).data;
-      resolve(buildPreprocessedVersions(imgData,w,h));
+      const versions=buildPreprocessedVersions(imgData,w,h);
+      console.log('[ScoreMyPack] Versions built:',versions.length,'Image size:',w+'x'+h);
+      versions.forEach((v,i)=>console.log(`  v${i}: ${v.label} dataUrl length:`,v.dataUrl.length));
+      resolve(versions);
     };
     img.src=dataUrl;
   });
@@ -944,17 +947,20 @@ async function runOcr(dataUrl){
       pass++;
       setProgress(20+Math.round((pass/versions.length)*40),
         `Reading label… (pass ${pass}/${versions.length})`,v.label);
-      // PSM 6 = uniform block of text (best for nutrition tables)
-      // PSM 4 = single column — try for full image passes
       await worker.setParameters({
         tessedit_pageseg_mode:'6',
         preserve_interword_spaces:'1',
       });
       const r=await worker.recognize(v.dataUrl);
-      const text=filterNonLatin(r.data.text);
+      const rawText=r.data.text||'';
+      console.log(`[ScoreMyPack] Pass ${pass} (${v.label}) raw length:`,rawText.length);
+      console.log(`[ScoreMyPack] Pass ${pass} raw text:`,rawText.slice(0,500));
+      const text=filterNonLatin(rawText);
       const score=scoreOcrText(text);
+      console.log(`[ScoreMyPack] Pass ${pass} score:`,score,'filtered length:',text.length);
       if(score>bestScore){bestScore=score;best=text;}
     }
+    console.log('[ScoreMyPack] Best score:',bestScore,'Best text:',best.slice(0,500));
     await worker.terminate();
     return best;
   }catch(e){await worker.terminate();throw e;}
