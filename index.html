@@ -475,7 +475,7 @@ main { padding: 12px 16px; gap: 10px; overflow: hidden; position: relative; }
     <div class="crop-modal" id="crop-modal">
       <div class="crop-header">
         <div class="crop-title">Select Nutrition Table</div>
-        <div class="crop-hint">Drag corners to fit the table</div>
+        <div class="crop-hint">Fit tightly around the nutrition table only — exclude surrounding text</div>
       </div>
       <div class="crop-canvas-wrap" id="crop-canvas-wrap">
         <img id="crop-img" alt="crop preview">
@@ -494,7 +494,7 @@ main { padding: 12px 16px; gap: 10px; overflow: hidden; position: relative; }
         </div>
       </div>
       <div class="crop-actions">
-        <button class="crop-btn crop-btn-skip" onclick="cropSkip()">Use Full Image</button>
+        <button class="crop-btn crop-btn-skip" onclick="cropSkip()">Skip — Use Full Image</button>
         <button class="crop-btn crop-btn-confirm" onclick="cropConfirm()">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
           Crop &amp; Analyse
@@ -633,7 +633,7 @@ async function handleImage(input){
   const notice=document.getElementById('compress-notice');
   if(file.size>3*1024*1024)notice.classList.add('active');
   try{
-    const r=await compressImage(file,1800);
+    const r=await compressImage(file,2400);
     imgDataUrl=r.dataUrl;
     document.getElementById('preview-img').src=r.dataUrl;
     document.getElementById('scanner-area').classList.add('has-image');
@@ -809,60 +809,120 @@ function scoreOcrText(text){
 // Returns array of {dataUrl, label} preprocessed versions for multi-pass OCR
 function buildPreprocessedVersions(imgData,w,h){
   const grey=toGrey(imgData,w,h);
-  // Detect label region — silently fall back to full image if not found
-  const region=detectLabelRegion(grey,w,h);
+  const dark=isDarkBackground(grey,w,h);
+  // If dark bg (white text on dark), invert first
+  const workGrey=dark?invertGrey(grey):grey;
+  const region=detectLabelRegion(workGrey,w,h);
   const versions=[];
-  // Helper: crop grey to region, sharpen, threshold, return canvas dataUrl
-  function makeVersion(g,gw,gh,label){
-    const sharpened=unsharpMask(g,gw,gh);
+
+  function makeVersion(g,gw,gh,label,contrast=false){
+    let g2=g;
+    if(contrast){
+      // Contrast stretch
+      let mn=255,mx=0;for(const v of g2){if(v<mn)mn=v;if(v>mx)mx=v;}
+      const range=mx-mn||1;
+      g2=new Float32Array(g2.length);
+      for(let i=0;i<g.length;i++)g2[i]=(g[i]-mn)/range*255;
+    }
+    const sharpened=unsharpMask(g2,gw,gh);
     const thresholded=sauvolaThreshold(sharpened,gw,gh);
-    const c=document.createElement('canvas');c.width=gw;c.height=gh;
-    const ctx=c.getContext('2d');
+    const cv=document.createElement('canvas');cv.width=gw;cv.height=gh;
+    const ctx=cv.getContext('2d');
     const id=ctx.createImageData(gw,gh);id.data.set(thresholded);
     ctx.putImageData(id,0,0);
-    return{dataUrl:c.toDataURL('image/png'),label};
+    return{dataUrl:cv.toDataURL('image/png'),label};
   }
+
   if(region){
-    // Version 1: cropped + adaptive threshold (primary)
     const cw=region.w,ch=region.h;
     const cropped=new Float32Array(cw*ch);
     for(let y=0;y<ch;y++)for(let x=0;x<cw;x++)
-      cropped[y*cw+x]=grey[(region.y+y)*w+(region.x+x)];
+      cropped[y*cw+x]=workGrey[(region.y+y)*w+(region.x+x)];
+    // v1: crop + adaptive threshold
     versions.push(makeVersion(cropped,cw,ch,'crop+adaptive'));
-    // Version 2: cropped + light sharpen only (different radius)
-    const c2=document.createElement('canvas');c2.width=cw;c2.height=ch;
-    const ctx2=c2.getContext('2d');
-    const sharpened2=unsharpMask(cropped,cw,ch,0.3);
-    const id2=ctx2.createImageData(cw,ch);
-    // Simple contrast stretch for version 2
-    let mn=255,mx=0;for(const v of sharpened2){if(v<mn)mn=v;if(v>mx)mx=v;}
-    const range=mx-mn||1;
-    for(let i=0;i<cw*ch;i++){
-      const v=Math.round((sharpened2[i]-mn)/range*255);
-      id2.data[i*4]=id2.data[i*4+1]=id2.data[i*4+2]=v;id2.data[i*4+3]=255;
-    }
-    ctx2.putImageData(id2,0,0);
-    versions.push({dataUrl:c2.toDataURL('image/png'),label:'crop+contrast'});
+    // v2: crop + contrast stretch + adaptive
+    versions.push(makeVersion(cropped,cw,ch,'crop+contrast',true));
   }
-  // Always include full-image adaptive threshold as fallback
-  versions.push(makeVersion(grey,w,h,'full+adaptive'));
+
+  // v3: full image + adaptive (always)
+  versions.push(makeVersion(workGrey,w,h,'full+adaptive'));
+  // v4: full image + contrast stretch
+  versions.push(makeVersion(workGrey,w,h,'full+contrast',true));
+
   return versions;
 }
 
 // ── Load image → run preprocessing pipeline ──────────────────────
+/* ── Deskew: projection profile ── */
+function deskewCanvas(srcCanvas){
+  const w=srcCanvas.width,h=srcCanvas.height;
+  const ctx=srcCanvas.getContext('2d');
+  const grey=toGrey(ctx.getImageData(0,0,w,h).data,w,h);
+  // Binary threshold for projection
+  const bin=new Uint8Array(w*h);
+  for(let i=0;i<w*h;i++)bin[i]=grey[i]<128?1:0;
+  // Try angles from -15 to +15 in 0.5° steps
+  let bestAngle=0,bestScore=-1;
+  const RAD=Math.PI/180;
+  for(let deg=-15;deg<=15;deg+=0.5){
+    const rad=deg*RAD,cos=Math.cos(rad),sin=Math.sin(rad);
+    const cx=w/2,cy=h/2;
+    const proj=new Int32Array(h);
+    for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+      if(!bin[y*w+x])continue;
+      const ry=Math.round((x-cx)*sin+(y-cy)*cos+cy);
+      if(ry>=0&&ry<h)proj[ry]++;
+    }
+    // Score = variance of projection (high variance = well-aligned rows)
+    let mean=0;for(const v of proj)mean+=v;mean/=h;
+    let variance=0;for(const v of proj)variance+=(v-mean)**2;
+    if(variance>bestScore){bestScore=variance;bestAngle=deg;}
+  }
+  if(Math.abs(bestAngle)<0.5)return srcCanvas; // no correction needed
+  // Rotate canvas by bestAngle
+  const out=document.createElement('canvas');out.width=w;out.height=h;
+  const octx=out.getContext('2d');
+  octx.translate(w/2,h/2);
+  octx.rotate(-bestAngle*RAD);
+  octx.drawImage(srcCanvas,-w/2,-h/2);
+  return out;
+}
+
+/* ── Dark background detection ── */
+function isDarkBackground(grey,w,h){
+  // Sample centre region
+  let dark=0,total=0;
+  const x0=Math.floor(w*0.25),x1=Math.floor(w*0.75);
+  const y0=Math.floor(h*0.25),y1=Math.floor(h*0.75);
+  for(let y=y0;y<y1;y+=4)for(let x=x0;x<x1;x+=4){
+    if(grey[y*w+x]<100)dark++;total++;
+  }
+  return total>0&&(dark/total)>0.5;
+}
+
+/* ── Invert greyscale ── */
+function invertGrey(grey){
+  const out=new Float32Array(grey.length);
+  for(let i=0;i<grey.length;i++)out[i]=255-grey[i];
+  return out;
+}
+
 function prepareImage(dataUrl){
   return new Promise(resolve=>{
     const img=new Image();
     img.onload=()=>{
       let w=img.naturalWidth,h=img.naturalHeight;
-      // Upscale if too small — Tesseract needs at least 1400px on longest side
-      const MIN=1400;
+      const MIN=1600;
       if(Math.max(w,h)<MIN){const sc=MIN/Math.max(w,h);w=Math.round(w*sc);h=Math.round(h*sc);}
-      // Cap at 3000px to avoid memory issues on mobile
-      const MAX=3000;
+      const MAX=3200;
       if(Math.max(w,h)>MAX){const sc=MAX/Math.max(w,h);w=Math.round(w*sc);h=Math.round(h*sc);}
-      const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
-      const ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,w,h);
+      // Draw to canvas
+      let canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+      let ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,w,h);
+      // Deskew
+      canvas=deskewCanvas(canvas);
+      w=canvas.width;h=canvas.height;
+      ctx=canvas.getContext('2d');
       const imgData=ctx.getImageData(0,0,w,h).data;
       resolve(buildPreprocessedVersions(imgData,w,h));
     };
@@ -884,9 +944,13 @@ async function runOcr(dataUrl){
       pass++;
       setProgress(20+Math.round((pass/versions.length)*40),
         `Reading label… (pass ${pass}/${versions.length})`,v.label);
+      // PSM 6 = uniform block of text (best for nutrition tables)
+      // PSM 4 = single column — try for full image passes
+      const psm=v.label.startsWith('full')?'4':'6';
       await worker.setParameters({
-        tessedit_pageseg_mode: v.label.startsWith('crop')?'6':'6',
-        preserve_interword_spaces:'1'
+        tessedit_pageseg_mode:psm,
+        preserve_interword_spaces:'1',
+        tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,:()/%- ',
       });
       const r=await worker.recognize(v.dataUrl);
       const text=filterNonLatin(r.data.text);
@@ -1484,9 +1548,15 @@ function cropConfirm(){
   const nw=_cropImgNatural.w,nh=_cropImgNatural.h;
   const sx=_cropBox.x/100*nw,sy=_cropBox.y/100*nh;
   const sw=_cropBox.w/100*nw,sh=_cropBox.h/100*nh;
-  canvas.width=sw;canvas.height=sh;
-  ctx.drawImage(img,sx,sy,sw,sh,0,0,sw,sh);
-  imgDataUrl=canvas.toDataURL('image/jpeg',0.92);
+  // Enforce minimum 1200px on longer side for OCR accuracy
+  const MIN_OCR=1200;
+  const scale=Math.max(1,MIN_OCR/Math.max(sw,sh));
+  const outW=Math.round(sw*scale),outH=Math.round(sh*scale);
+  canvas.width=outW;canvas.height=outH;
+  ctx.imageSmoothingEnabled=true;
+  ctx.imageSmoothingQuality='high';
+  ctx.drawImage(img,sx,sy,sw,sh,0,0,outW,outH);
+  imgDataUrl=canvas.toDataURL('image/jpeg',0.95);
   document.getElementById('preview-img').src=imgDataUrl;
   document.getElementById('crop-modal').classList.remove('active');
   document.getElementById('analyse-btn').disabled=false;
