@@ -1193,6 +1193,51 @@ function parseNutrition(rawText){
     if(exp100>=50&&exp100<=1500)scale=100/serving_size_g;
   }
   const sc=v=>v!==null?+(v*scale).toFixed(1):null;
+  
+  // ── POSITIONAL FALLBACK ──
+  // If most values are missing, try extracting by row position
+  // using standard FSSAI label order
+  const found=[energy_kcal,fat_g,saturated_fat_g,sugar_g,fibre_g,protein_g,sodium_mg].filter(v=>v!==null).length;
+  if(found<3){
+    // Extract all numbers from all lines in order
+    const numRows=lines.map(l=>nums(l).filter(v=>v>0)).filter(r=>r.length>0);
+    if(numRows.length>=5){
+      // FSSAI positional order: energy, fat, sat_fat, [mufa,pufa,trans,chol], sodium, carbs, sugar, [added], fibre, protein
+      const POSITIONS=[
+        {field:'energy_kcal', min:50, max:900,  row:0},
+        {field:'fat_g',       min:0,  max:100,  row:1},
+        {field:'sat_fat',     min:0,  max:60,   row:2},
+        {field:'sodium_mg',   min:0,  max:3000, row:6},
+        {field:'carbs_g',     min:0,  max:100,  row:7},
+        {field:'sugar_g',     min:0,  max:100,  row:8},
+        {field:'fibre_g',     min:0,  max:20,   row:10},
+        {field:'protein_g',   min:0,  max:50,   row:11},
+      ];
+      // Find which column has per-100g values (first column with energy-range number)
+      let col=0;
+      if(numRows[0]&&numRows[0].length>1){
+        // If first row has multiple values, find the one in energy range
+        const energyIdx=numRows[0].findIndex(v=>v>=50&&v<=900);
+        if(energyIdx>0)col=energyIdx;
+      }
+      POSITIONS.forEach(p=>{
+        const row=numRows[Math.min(p.row,numRows.length-1)];
+        if(!row||!row.length)return;
+        const v=row[Math.min(col,row.length-1)];
+        if(v>=p.min&&v<=p.max){
+          if(p.field==='energy_kcal'&&!energy_kcal)energy_kcal=v;
+          if(p.field==='fat_g'&&!fat_g)fat_g=v;
+          if(p.field==='sat_fat'&&!saturated_fat_g)saturated_fat_g=v;
+          if(p.field==='sodium_mg'&&!sodium_mg)sodium_mg=v;
+          if(p.field==='carbs_g'&&!carbs_g)carbs_g=v;
+          if(p.field==='sugar_g'&&!sugar_g)sugar_g=v;
+          if(p.field==='fibre_g'&&!fibre_g)fibre_g=v;
+          if(p.field==='protein_g'&&!protein_g)protein_g=v;
+        }
+      });
+    }
+  }
+
   return{energy_kcal:sc(energy_kcal),energy_kj:sc(energy_kj),fat_g:sc(fat_g),saturated_fat_g:sc(saturated_fat_g),carbs_g:sc(carbs_g),sugar_g:sc(sugar_g),fibre_g:sc(fibre_g),protein_g:sc(protein_g),sodium_mg:sc(sodium_mg),serving_size_g};
 }
 function confScore(n){
