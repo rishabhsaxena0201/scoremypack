@@ -819,6 +819,42 @@ function buildPreprocessedVersions(imgData,w,h){
   const region=detectLabelRegion(workGrey,w,h);
   const versions=[];
 
+  // ── HIGH-CONTRAST VERSION (works best for dark/angled labels) ──
+  // Crop to central table area (skip top clutter + bottom ingredients)
+  // Works well for FSSAI labels which have table in centre of label
+  function makeHighContrast(g, gw, gh, cropX0, cropY0, cropX1, cropY1, label){
+    const cw=cropX1-cropX0, ch=cropY1-cropY0;
+    if(cw<50||ch<50)return null;
+    const cropped=new Float32Array(cw*ch);
+    for(let y=0;y<ch;y++)for(let x=0;x<cw;x++)
+      cropped[y*cw+x]=g[(cropY0+y)*gw+(cropX0+x)];
+    // Contrast stretch to full 0-255
+    let mn=255,mx=0;
+    for(const v of cropped){if(v<mn)mn=v;if(v>mx)mx=v;}
+    const range=mx-mn||1;
+    const stretched=new Float32Array(cw*ch);
+    for(let i=0;i<cw*ch;i++)stretched[i]=(cropped[i]-mn)/range*255;
+    // Sharpen via unsharp mask with stronger settings
+    const sharpened=unsharpMask(stretched,cw,ch,1.5);
+    // Sauvola threshold
+    const thresholded=sauvolaThreshold(sharpened,cw,ch,20,0.15);
+    const cv=document.createElement('canvas');cv.width=cw;cv.height=ch;
+    const ctx=cv.getContext('2d');
+    const id=ctx.createImageData(cw,ch);id.data.set(thresholded);
+    ctx.putImageData(id,0,0);
+    return{dataUrl:cv.toDataURL('image/png'),label,psm:'12'};
+  }
+
+  // Table region crop: top 25%-72% height, left 0-75% width
+  const tx0=0, ty0=Math.floor(h*0.25);
+  const tx1=Math.floor(w*0.78), ty1=Math.floor(h*0.72);
+  const hcv=makeHighContrast(workGrey,w,h,tx0,ty0,tx1,ty1,'table+highcontrast');
+  if(hcv)versions.push(hcv);
+
+  // Also try full image high contrast
+  const hcFull=makeHighContrast(workGrey,w,h,0,0,w,h,'full+highcontrast');
+  if(hcFull)versions.push(hcFull);
+
   function makeVersion(g,gw,gh,label,contrast=false){
     let g2=g;
     if(contrast){
@@ -980,8 +1016,8 @@ async function runOcr(dataUrl){
       pass++;
       setProgress(20+Math.round((pass/versions.length)*40),
         `Reading label… (pass ${pass}/${versions.length})`,v.label);
-      // PSM 6=uniform block, PSM 4=single column, PSM 11=sparse text
-      const psm=v.label==='full+raw'?'4':v.label==='full+original'?'11':'6';
+      // Use per-version PSM if specified, else default to 6
+      const psm=v.psm||(v.label==='full+raw'?'4':v.label==='full+original'?'11':'6');
       await worker.setParameters({
         tessedit_pageseg_mode:psm,
         preserve_interword_spaces:'1',
