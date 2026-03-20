@@ -260,7 +260,6 @@ main{flex:1;padding:10px 16px;gap:8px;overflow:hidden;position:relative}
 .download-btn{flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s;background:var(--surface2);color:var(--text)}
 .download-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 
-body{margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh}
 
 /* ── Crop Tool ── */
 .crop-modal{display:none;position:fixed;inset:0;z-index:500;background:var(--bg);flex-direction:column}
@@ -493,8 +492,8 @@ body{margin:0;background:#000;display:flex;align-items:center;justify-content:ce
 let _tReady=null;
 function loadTesseract(){
   if(_tReady) return _tReady;
-  const cdns=['https://unpkg.com/tesseract.js@5.1.0/dist/tesseract.min.js','https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.min.js'];
-  _tReady=(async()=>{for(const url of cdns){if(typeof Tesseract!=='undefined')return;try{await new Promise((res,rej)=>{const s=document.createElement('script');s.src=url;s.onload=res;s.onerror=rej;document.head.appendChild(s);});if(typeof Tesseract!=='undefined')return;}catch(e){}}throw new Error('Could not load Tesseract.js');})();
+  const cdns=['https://unpkg.com/tesseract.js@5.1.0/dist/tesseract.min.js','https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.min.js','https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/5.1.0/tesseract.min.js'];
+  _tReady=(async()=>{for(const url of cdns){if(typeof Tesseract!=='undefined')return;try{await new Promise((res,rej)=>{const s=document.createElement('script');s.src=url;s.onload=res;s.onerror=rej;document.head.appendChild(s);setTimeout(()=>rej(new Error('timeout')),15000);});if(typeof Tesseract!=='undefined')return;}catch(e){console.warn('CDN failed:',url,e);}}throw new Error('Could not load Tesseract.js — check internet connection');})();
   return _tReady;
 }
 
@@ -516,7 +515,6 @@ async function handleImage(input){
     document.getElementById('analyse-btn').disabled=false;
     notice.classList.remove('active');
     if(file.size>3*1024*1024){notice.querySelector('span').textContent=`✓ Optimised ${(file.size/1024/1024).toFixed(1)}MB → ${(r.size/1024).toFixed(0)}KB`;notice.classList.add('active');setTimeout(()=>notice.classList.remove('active'),3000);}
-    hideAll();
     showCropTool(r.dataUrl);
   }catch(e){console.error(e);}
   input.value='';
@@ -1242,7 +1240,7 @@ async function analyseImage(){
   document.getElementById('processing-card').classList.add('active');
   hideAll();
   setProgress(5,'Loading OCR engine…','First use downloads ~3MB');
-  try{await loadTesseract();}catch(e){document.getElementById('processing-card').classList.remove('active');showError('Could not load OCR engine. Please check your internet connection.');resetApp();return;}
+  try{await loadTesseract();}catch(e){document.getElementById('processing-card').classList.remove('active');showError('OCR engine failed to load. Check your internet and try again. ('+e.message+')');resetApp();return;}
   try{
     setProgress(10,'Finding nutrition table…','Detecting label region');
     const ocrText=await runOcr(imgDataUrl);
