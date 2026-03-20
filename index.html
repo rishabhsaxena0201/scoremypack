@@ -919,8 +919,8 @@ function prepareImage(dataUrl){
       // Draw to canvas
       let canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
       let ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,w,h);
-      // Deskew
-      canvas=deskewCanvas(canvas);
+      // Deskew — wrapped in try/catch, never breaks pipeline
+      try{canvas=deskewCanvas(canvas);}catch(e){console.warn('Deskew failed:',e);}
       w=canvas.width;h=canvas.height;
       ctx=canvas.getContext('2d');
       const imgData=ctx.getImageData(0,0,w,h).data;
@@ -946,11 +946,9 @@ async function runOcr(dataUrl){
         `Reading label… (pass ${pass}/${versions.length})`,v.label);
       // PSM 6 = uniform block of text (best for nutrition tables)
       // PSM 4 = single column — try for full image passes
-      const psm=v.label.startsWith('full')?'4':'6';
       await worker.setParameters({
-        tessedit_pageseg_mode:psm,
+        tessedit_pageseg_mode:'6',
         preserve_interword_spaces:'1',
-        tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,:()/%- ',
       });
       const r=await worker.recognize(v.dataUrl);
       const text=filterNonLatin(r.data.text);
