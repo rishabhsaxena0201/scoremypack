@@ -1473,25 +1473,26 @@ let _drag=null,_dragStart=null,_natW=0,_natH=0,_rendW=0,_rendH=0;
 function showCropTool(dataUrl){
   const modal=document.getElementById('crop-modal');
   const img=document.getElementById('crop-img');
-  img.src=dataUrl;
+  // Show modal FIRST so dimensions are available
+  modal.classList.add('active');
   img.onload=function(){
     _natW=img.naturalWidth;_natH=img.naturalHeight;
-    // Calculate rendered dimensions (object-fit:contain in crop-canvas-wrap)
     const wrap=document.getElementById('crop-canvas-wrap');
-    const ww=wrap.clientWidth,wh=wrap.clientHeight;
+    const ww=wrap.clientWidth||window.innerWidth;
+    const wh=wrap.clientHeight||Math.round(window.innerHeight*0.7);
     const scale=Math.min(ww/_natW,wh/_natH);
     _rendW=Math.round(_natW*scale);_rendH=Math.round(_natH*scale);
-    // Position overlay to match rendered image
     const overlay=document.getElementById('crop-overlay');
     const offX=Math.round((ww-_rendW)/2);const offY=Math.round((wh-_rendH)/2);
     overlay.style.left=offX+'px';overlay.style.top=offY+'px';
     overlay.style.width=_rendW+'px';overlay.style.height=_rendH+'px';
-    // Default box: full image with small inset
     _cropBox={x:5,y:5,w:90,h:90};
     renderCropBox();
-    modal.classList.add('active');
     initCropDrag();
   };
+  img.src=dataUrl;
+  // If image already cached, onload may not fire — trigger manually
+  if(img.complete&&img.naturalWidth>0){img.onload();}
 }
 
 function renderCropBox(){
