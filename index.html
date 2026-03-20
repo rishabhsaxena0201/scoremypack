@@ -21,6 +21,15 @@ posthog.init('phc_pV141cAwQHLesHjKjr21zJ5jdSgyYG2OwBk8vEjazhU', {
   persistence: 'localStorage+cookie'
 });
 </script>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-8GHGE13QRJ"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-8GHGE13QRJ');
+</script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -269,7 +278,7 @@ body { height: 100%; overflow: hidden; min-height: unset; }
 /* Header: tighter padding */
 header { padding: 12px 20px 10px; flex-shrink: 0; }
 
-/* Main: fills remaining space, no scroll */
+/* Main: fills remaining space, clips scanner screen only */
 main {
   flex: 1;
   padding: 12px 16px;
@@ -277,6 +286,7 @@ main {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 /* Scanner card: flex-grow to fill space, scanner-area uses remaining */
@@ -301,21 +311,74 @@ main {
 /* Data notice: tighter */
 .data-notice { padding: 8px 12px; font-size: 10px; }
 
+/* Compress notice: compact */
+.compress-notice { padding: 7px 12px; font-size: 10px; }
+
 /* Processing: centred, fills main */
-.processing-card {
-  flex: 1;
-  justify-content: center;
-}
+.processing-card { flex: 1; justify-content: center; }
 
 /* Error card: fills space */
 .error-card { flex: 1; justify-content: center; }
 
-/* Review + Result: allow scroll — override hidden */
-.review-card { overflow-y: auto; max-height: calc(100vh - 80px); }
-.result-card { overflow-y: auto; max-height: calc(100vh - 80px); }
+/* ── CROP: fullscreen fixed overlay so it's never clipped ── */
+.crop-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 500;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  display: none;
+  flex-direction: column;
+  background: var(--bg);
+  overflow: hidden;
+}
+.crop-modal.active { display: flex; }
+.crop-canvas-wrap {
+  flex: 1;
+  max-height: unset !important;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  background: #000;
+}
+.crop-canvas-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 
-/* Compress notice: compact */
-.compress-notice { padding: 7px 12px; font-size: 10px; }
+/* ── REVIEW + RESULT: fullscreen fixed so they can scroll freely ── */
+.review-card {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 400;
+  border-radius: 0 !important;
+  overflow-y: auto !important;
+  max-height: unset !important;
+  display: none;
+  animation: none !important;
+}
+.review-card.active { display: block; }
+
+.result-card {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 400;
+  border-radius: 0 !important;
+  overflow-y: auto !important;
+  max-height: unset !important;
+  display: none;
+  animation: none !important;
+}
+.result-card.active { display: block; }
+
+/* Rescan button: fixed at bottom when result is showing */
+.rescan-btn {
+  position: sticky;
+  bottom: 16px;
+  margin: 16px 20px;
+  display: block;
+}
 </style>
 </head>
 <body>
