@@ -1706,10 +1706,30 @@ async function downloadPNG(){
          W/2, y+46, '300 11px sans-serif', '#7A96B0'+'88', 'center');
 
     // ── DOWNLOAD ──
-    const link = document.createElement('a');
-    link.download = 'scoremypack-report-' + new Date().toISOString().slice(0,10) + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
+    const dataUrl = canvas.toDataURL('image/png');
+    const filename = 'scoremypack-report-' + new Date().toISOString().slice(0,10) + '.png';
+
+    // Try standard download first
+    try {
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = dataUrl;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch(e) {}
+
+    // Also open in new tab as fallback (works on iOS — user can long-press to save)
+    setTimeout(() => {
+      const w = window.open();
+      if(w) {
+        w.document.write('<title>' + filename + '</title>');
+        w.document.write('<style>body{margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh}</style>');
+        w.document.write('<img src="' + dataUrl + '" style="max-width:100%;height:auto;">');
+        w.document.write('<p style="position:fixed;bottom:20px;left:0;right:0;text-align:center;color:#fff;font-family:sans-serif;font-size:13px">Long-press the image and tap Save to Photos</p>');
+        w.document.close();
+      }
+    }, 300);
 
   } catch(e) {
     console.error('PNG generation failed:', e);
