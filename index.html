@@ -849,6 +849,31 @@ function buildPreprocessedVersions(imgData,w,h){
   // v4: full image + contrast stretch
   versions.push(makeVersion(workGrey,w,h,'full+contrast',true));
 
+  // v5: raw greyscale as PNG - no thresholding, let Tesseract handle it
+  // Often works better for coloured/dark backgrounds
+  const rawCanvas=document.createElement('canvas');rawCanvas.width=w;rawCanvas.height=h;
+  const rawCtx=rawCanvas.getContext('2d');
+  const rawId=rawCtx.createImageData(w,h);
+  for(let i=0;i<w*h;i++){
+    const v=Math.round(workGrey[i]);
+    rawId.data[i*4]=rawId.data[i*4+1]=rawId.data[i*4+2]=v;rawId.data[i*4+3]=255;
+  }
+  rawCtx.putImageData(rawId,0,0);
+  versions.push({dataUrl:rawCanvas.toDataURL('image/png')+'',label:'full+raw'});
+
+  // v6: if dark background, also try original (non-inverted) raw
+  if(dark){
+    const origCanvas=document.createElement('canvas');origCanvas.width=w;origCanvas.height=h;
+    const origCtx=origCanvas.getContext('2d');
+    const origId=origCtx.createImageData(w,h);
+    for(let i=0;i<w*h;i++){
+      const v=Math.round(grey[i]);
+      origId.data[i*4]=origId.data[i*4+1]=origId.data[i*4+2]=v;origId.data[i*4+3]=255;
+    }
+    origCtx.putImageData(origId,0,0);
+    versions.push({dataUrl:origCanvas.toDataURL('image/png'),label:'full+original'});
+  }
+
   return versions;
 }
 
@@ -912,9 +937,13 @@ function prepareImage(dataUrl){
     const img=new Image();
     img.onload=()=>{
       let w=img.naturalWidth,h=img.naturalHeight;
+      // Ensure longest side >= 1600px
       const MIN=1600;
       if(Math.max(w,h)<MIN){const sc=MIN/Math.max(w,h);w=Math.round(w*sc);h=Math.round(h*sc);}
-      const MAX=3200;
+      // Also ensure shortest side >= 1000px (fixes narrow portrait images)
+      const MIN_SHORT=1000;
+      if(Math.min(w,h)<MIN_SHORT){const sc=MIN_SHORT/Math.min(w,h);w=Math.round(w*sc);h=Math.round(h*sc);}
+      const MAX=4000;
       if(Math.max(w,h)>MAX){const sc=MAX/Math.max(w,h);w=Math.round(w*sc);h=Math.round(h*sc);}
       // Draw to canvas
       let canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
@@ -947,8 +976,10 @@ async function runOcr(dataUrl){
       pass++;
       setProgress(20+Math.round((pass/versions.length)*40),
         `Reading label… (pass ${pass}/${versions.length})`,v.label);
+      // PSM 6=uniform block, PSM 4=single column, PSM 11=sparse text
+      const psm=v.label==='full+raw'?'4':v.label==='full+original'?'11':'6';
       await worker.setParameters({
-        tessedit_pageseg_mode:'6',
+        tessedit_pageseg_mode:psm,
         preserve_interword_spaces:'1',
       });
       const r=await worker.recognize(v.dataUrl);
