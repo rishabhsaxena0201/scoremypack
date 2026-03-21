@@ -493,8 +493,8 @@ let _tReady=null;
 function loadTesseract(){
   if(_tReady) return _tReady;
   const cdns=[
-    'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js',
-    'https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js'
+    'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.min.js',
+    'https://unpkg.com/tesseract.js@5.1.0/dist/tesseract.min.js'
   ];
   _tReady=(async()=>{
     for(const url of cdns){
@@ -504,7 +504,7 @@ function loadTesseract(){
           const s=document.createElement('script');
           s.src=url; s.onload=res; s.onerror=rej;
           document.head.appendChild(s);
-          setTimeout(()=>rej(new Error('timeout')),20000);
+          setTimeout(()=>rej(new Error('timeout')),25000);
         });
         if(typeof Tesseract!=='undefined') return;
       }catch(e){console.warn('CDN failed:',url,e);}
@@ -811,36 +811,28 @@ async function runOcr(dataUrl){
   const versions=await prepareImage(dataUrl);
   setProgress(18,'Preprocessing image…',versions.length+' versions prepared');
 
-  // Try jsdelivr first (faster in India), fallback to unpkg
-  const CDN='https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1';
-  const LANG='https://cdn.jsdelivr.net/npm/tesseract.js-data@4.0.0/eng.traineddata.gz';
-
-  let worker;
-  try{
-    worker=await Promise.race([
-      Tesseract.createWorker({
-        workerPath: CDN+'/dist/worker.min.js',
-        langPath: 'https://cdn.jsdelivr.net/npm/tesseract.js-data@4.0.0',
-        corePath: CDN+'/dist/tesseract-core.wasm.js',
-        logger: m=>{
-          if(m.status==='loading tesseract core') setProgress(22,'Loading OCR engine…','');
-          else if(m.status==='loading language traineddata') setProgress(35,'Loading language data…','');
-          else if(m.status==='recognizing text') setProgress(45+Math.round(m.progress*25),'Reading label…','');
-        }
-      }),
-      new Promise((_,rej)=>setTimeout(()=>rej(new Error('Worker init timeout')),30000))
-    ]);
-  }catch(e){
-    throw new Error('OCR engine failed to load. Please check your internet connection.');
-  }
+  // v5 API — simpler, uses tessdata_fast (~4MB total vs 13MB for v4)
+  setProgress(22,'Downloading OCR data…','First use only, ~4MB');
+  const worker=await Tesseract.createWorker('eng',1,{
+    logger: m=>{
+      if(m.status==='loading tesseract core'){
+        setProgress(25,'Loading OCR engine…','');
+      } else if(m.status==='loading language traineddata'){
+        const pct=Math.round((m.progress||0)*100);
+        setProgress(25+Math.round((m.progress||0)*25),
+          'Downloading language data…',pct+'% — please wait');
+      } else if(m.status==='initializing api'){
+        setProgress(52,'Initialising…','');
+      }
+    },
+    errorHandler: e=>console.error('[SMP] Tesseract error:',e)
+  });
 
   try{
-    await worker.loadLanguage('eng');
-    await worker.initialize('eng');
     let best='',bestScore=-1,pass=0;
     for(const v of versions){
       pass++;
-      setProgress(60+Math.round((pass/versions.length)*25),
+      setProgress(55+Math.round((pass/versions.length)*25),
         'Reading label… (pass '+pass+'/'+versions.length+')',v.label);
       await worker.setParameters({
         tessedit_pageseg_mode: v.psm||'6',
@@ -1283,7 +1275,7 @@ async function analyseImage(){
   document.getElementById('compress-notice').classList.remove('active');
   document.getElementById('processing-card').classList.add('active');
   hideAll();
-  setProgress(5,'Loading OCR engine…','First use downloads ~3MB');
+  setProgress(5,'Loading OCR engine…','First use downloads ~4MB of data');
   try{await loadTesseract();}catch(e){document.getElementById('processing-card').classList.remove('active');showError('OCR engine failed to load. Check your internet and try again. ('+e.message+')');resetApp();return;}
   try{
     setProgress(10,'Finding nutrition table…','Detecting label region');
