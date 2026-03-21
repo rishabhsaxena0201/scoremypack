@@ -493,8 +493,8 @@ let _tReady=null;
 function loadTesseract(){
   if(_tReady) return _tReady;
   const cdns=[
-    'https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js',
-    'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js'
+    'https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js',
+    'https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js'
   ];
   _tReady=(async()=>{
     for(const url of cdns){
@@ -502,14 +502,14 @@ function loadTesseract(){
       try{
         await new Promise((res,rej)=>{
           const s=document.createElement('script');
-          s.src=url;s.onload=res;s.onerror=rej;
+          s.src=url; s.onload=res; s.onerror=rej;
           document.head.appendChild(s);
           setTimeout(()=>rej(new Error('timeout')),20000);
         });
         if(typeof Tesseract!=='undefined') return;
       }catch(e){console.warn('CDN failed:',url,e);}
     }
-    throw new Error('Could not load OCR engine');
+    throw new Error('Could not load OCR engine — check internet');
   })();
   return _tReady;
 }
@@ -810,18 +810,30 @@ function prepareImage(dataUrl){
 async function runOcr(dataUrl){
   const versions=await prepareImage(dataUrl);
   setProgress(18,'Preprocessing image…',versions.length+' versions prepared');
-  // Tesseract v4 worker with explicit CDN paths
-  const CDN='https://unpkg.com/tesseract.js@4.1.1';
-  const worker=await Tesseract.createWorker({
-    workerPath: CDN+'/dist/worker.min.js',
-    langPath: 'https://tessdata.projectnaptha.com/4.0.0',
-    corePath: CDN+'/dist/tesseract-core.wasm.js',
-    logger: m=>{
-      if(m.status==='loading tesseract core') setProgress(20,'Loading OCR engine…','');
-      else if(m.status==='loading language traineddata') setProgress(30,'Loading language data…','');
-      else if(m.status==='recognizing text') setProgress(40+Math.round(m.progress*30),'Reading label…','');
-    }
-  });
+
+  // Try jsdelivr first (faster in India), fallback to unpkg
+  const CDN='https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1';
+  const LANG='https://cdn.jsdelivr.net/npm/tesseract.js-data@4.0.0/eng.traineddata.gz';
+
+  let worker;
+  try{
+    worker=await Promise.race([
+      Tesseract.createWorker({
+        workerPath: CDN+'/dist/worker.min.js',
+        langPath: 'https://cdn.jsdelivr.net/npm/tesseract.js-data@4.0.0',
+        corePath: CDN+'/dist/tesseract-core.wasm.js',
+        logger: m=>{
+          if(m.status==='loading tesseract core') setProgress(22,'Loading OCR engine…','');
+          else if(m.status==='loading language traineddata') setProgress(35,'Loading language data…','');
+          else if(m.status==='recognizing text') setProgress(45+Math.round(m.progress*25),'Reading label…','');
+        }
+      }),
+      new Promise((_,rej)=>setTimeout(()=>rej(new Error('Worker init timeout')),30000))
+    ]);
+  }catch(e){
+    throw new Error('OCR engine failed to load. Please check your internet connection.');
+  }
+
   try{
     await worker.loadLanguage('eng');
     await worker.initialize('eng');
