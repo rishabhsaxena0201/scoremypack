@@ -1096,7 +1096,7 @@ function setProgress(pct,text,sub){
   if(text)document.getElementById('proc-text').textContent=text;
   if(sub!==undefined)document.getElementById('proc-sub').textContent=sub;
 }
-function hideAll(){['result-card','error-card','review-card','rescan-btn'].forEach(id=>document.getElementById(id).classList.remove('active'));}
+function hideAll(){['result-card','error-card','review-card','rescan-btn'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.remove('active');});}
 function showError(msg){document.getElementById('error-msg').textContent=msg;document.getElementById('error-card').classList.add('active');document.getElementById('rescan-btn').classList.add('active');}
 
 // ═══════════════════════════════════════════════════════════════════
