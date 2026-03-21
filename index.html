@@ -713,72 +713,74 @@ function buildPreprocessedVersions(imgData,w,h){
   const grey=toGrey(imgData,w,h);
   const dark=isDarkBackground(grey,w,h);
   const workGrey=dark?invertGrey(grey):grey;
-  const region=detectLabelRegion(workGrey,w,h);
   const versions=[];
 
-  function makeVersion(g,gw,gh,label,contrast){
-    let g2=g;
-    if(contrast){
-      let mn=255,mx=0;for(const v of g2){if(v<mn)mn=v;if(v>mx)mx=v;}
-      const range=mx-mn||1;g2=new Float32Array(g2.length);
-      for(let i=0;i<g.length;i++)g2[i]=(g[i]-mn)/range*255;
-    }
-    const sharpened=unsharpMask(g2,gw,gh);
-    const thresholded=sauvolaThreshold(sharpened,gw,gh);
-    const cv=document.createElement('canvas');cv.width=gw;cv.height=gh;
-    const ctx=cv.getContext('2d');
-    const id=ctx.createImageData(gw,gh);id.data.set(thresholded);
-    ctx.putImageData(id,0,0);
-    return{dataUrl:cv.toDataURL('image/png'),label,psm:'6'};
-  }
-
-  // v1+v2: cropped region (if found)
-  if(region){
-    const cw=region.w,ch=region.h;
-    const cropped=new Float32Array(cw*ch);
-    for(let y=0;y<ch;y++)for(let x=0;x<cw;x++)
-      cropped[y*cw+x]=workGrey[(region.y+y)*w+(region.x+x)];
-    versions.push(makeVersion(cropped,cw,ch,'crop+adaptive',false));
-    versions.push(makeVersion(cropped,cw,ch,'crop+contrast',true));
-  }
-
-  // v3: full image adaptive threshold
-  versions.push(makeVersion(workGrey,w,h,'full+adaptive',false));
-  // v4: full image contrast stretch
-  versions.push(makeVersion(workGrey,w,h,'full+contrast',true));
-
-  // v5: high-contrast table crop with PSM 12 (best for dark/angled labels)
-  // Crop centre of image: rows 25-72%, cols 0-78%
-  try{
-    const tx0=0,ty0=Math.floor(h*0.25),tx1=Math.floor(w*0.78),ty1=Math.floor(h*0.72);
-    const cw=tx1-tx0,ch=ty1-ty0;
-    if(cw>100&&ch>100){
-      const cropped=new Float32Array(cw*ch);
-      for(let y=0;y<ch;y++)for(let x=0;x<cw;x++)
-        cropped[y*cw+x]=workGrey[(ty0+y)*w+(tx0+x)];
-      let mn=255,mx=0;for(const v of cropped){if(v<mn)mn=v;if(v>mx)mx=v;}
-      const range=mx-mn||1;
-      const stretched=new Float32Array(cw*ch);
-      for(let i=0;i<cw*ch;i++)stretched[i]=(cropped[i]-mn)/range*255;
-      const sharpened=unsharpMask(stretched,cw,ch,1.5);
-      const thresholded=sauvolaThreshold(sharpened,cw,ch,20,0.15);
-      const cv=document.createElement('canvas');cv.width=cw;cv.height=ch;
-      const ctx=cv.getContext('2d');
-      const id=ctx.createImageData(cw,ch);id.data.set(thresholded);
-      ctx.putImageData(id,0,0);
-      versions.push({dataUrl:cv.toDataURL('image/png'),label:'table+hc',psm:'12'});
-    }
-  }catch(e){console.warn('v5 failed:',e);}
-
-  // v6: raw greyscale, no threshold, PSM 12
+  // ── v1: raw greyscale, no thresholding — Tesseract.js handles this best ──
   try{
     const cv=document.createElement('canvas');cv.width=w;cv.height=h;
     const ctx=cv.getContext('2d');
     const id=ctx.createImageData(w,h);
-    for(let i=0;i<w*h;i++){const v=Math.round(workGrey[i]);id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=v;id.data[i*4+3]=255;}
+    for(let i=0;i<w*h;i++){
+      const v=Math.round(workGrey[i]);
+      id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=v;id.data[i*4+3]=255;
+    }
     ctx.putImageData(id,0,0);
-    versions.push({dataUrl:cv.toDataURL('image/png'),label:'raw+grey',psm:'12'});
-  }catch(e){console.warn('v6 failed:',e);}
+    versions.push({dataUrl:cv.toDataURL('image/jpeg',0.92),label:'raw+grey',psm:'6'});
+  }catch(e){console.warn('v1 failed:',e);}
+
+  // ── v2: contrast stretch + raw (no threshold) ──
+  try{
+    let mn=255,mx=0;
+    for(const v of workGrey){if(v<mn)mn=v;if(v>mx)mx=v;}
+    const range=mx-mn||1;
+    const stretched=new Float32Array(workGrey.length);
+    for(let i=0;i<workGrey.length;i++) stretched[i]=(workGrey[i]-mn)/range*255;
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+    const ctx=cv.getContext('2d');
+    const id=ctx.createImageData(w,h);
+    for(let i=0;i<w*h;i++){
+      const v=Math.round(stretched[i]);
+      id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=v;id.data[i*4+3]=255;
+    }
+    ctx.putImageData(id,0,0);
+    versions.push({dataUrl:cv.toDataURL('image/jpeg',0.92),label:'contrast+raw',psm:'6'});
+  }catch(e){console.warn('v2 failed:',e);}
+
+  // ── v3: table crop raw (centre 25-72% height, 0-78% width) ──
+  try{
+    const tx0=0,ty0=Math.floor(h*0.25),tx1=Math.floor(w*0.78),ty1=Math.floor(h*0.72);
+    const cw=tx1-tx0,ch=ty1-ty0;
+    if(cw>100&&ch>100){
+      // Contrast stretch the crop
+      let mn=255,mx=0;
+      for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){
+        const v=workGrey[(ty0+y)*w+(tx0+x)];
+        if(v<mn)mn=v;if(v>mx)mx=v;
+      }
+      const range=mx-mn||1;
+      const cv=document.createElement('canvas');cv.width=cw;cv.height=ch;
+      const ctx=cv.getContext('2d');
+      const id=ctx.createImageData(cw,ch);
+      for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){
+        const v=Math.round((workGrey[(ty0+y)*w+(tx0+x)]-mn)/range*255);
+        const i=(y*cw+x)*4;
+        id.data[i]=id.data[i+1]=id.data[i+2]=v;id.data[i+3]=255;
+      }
+      ctx.putImageData(id,0,0);
+      versions.push({dataUrl:cv.toDataURL('image/jpeg',0.92),label:'table+raw',psm:'6'});
+    }
+  }catch(e){console.warn('v3 failed:',e);}
+
+  // ── v4: Sauvola threshold (original approach, as fallback) ──
+  try{
+    const sharpened=unsharpMask(workGrey,w,h);
+    const thresholded=sauvolaThreshold(sharpened,w,h);
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+    const ctx=cv.getContext('2d');
+    const id=ctx.createImageData(w,h);id.data.set(thresholded);
+    ctx.putImageData(id,0,0);
+    versions.push({dataUrl:cv.toDataURL('image/png'),label:'full+sauvola',psm:'6'});
+  }catch(e){console.warn('v4 failed:',e);}
 
   return versions;
 }
