@@ -1042,10 +1042,17 @@ function parseNutrition(rawText){
   // Serving size detection — covers: "Serving size 67g", "per 67g serve", "(30g)", "per 20g serving"
   // Also scans first 5 lines for header-embedded serving sizes (e.g. dark label with split header)
   const SERVING_PATTERNS=[
-    /serving\s*size\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*g/i,
-    /per\s*(\d+(?:\.\d+)?)\s*g\s*serv/i,
-    /\bserv(?:ing|e)?\s+(\d+(?:\.\d+)?)\s*g\b/i,
-    /\((\d+(?:\.\d+)?)\s*g\s*\)/i,
+    /serving\s*size\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*g/i,        // "Serving size: 50g"
+    /per\s*(\d+(?:\.\d+)?)\s*g\s*serv/i,                       // "per 50g serving"
+    /\bserv(?:ing|e)?\s+(\d+(?:\.\d+)?)\s*g\b/i,              // "serving 50g"
+    /\((\d+(?:\.\d+)?)\s*g\s*\)/i,                            // "(50g)"
+    /approx\.?\s*(\d+(?:\.\d+)?)\s*g/i,                       // "Approx 50g"
+    /portion\s*(?:size)?\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*g/i,  // "Portion size: 50g"
+    /(\d+(?:\.\d+)?)\s*g\s*per\s*serv/i,                      // "50g per serving"
+    /(\d+(?:\.\d+)?)\s*g\s*\/\s*serv/i,                      // "50g/serving"
+    /per\s*pack\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*g/i,           // "per pack 50g"
+    /each\s*(?:serving|serve)?\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*g/i, // "each serving: 50g"
+    /\bsize\s*[:\-]?\s*(\d+(?:\.\d+)?)\s*g/i,               // "size: 50g"
   ];
   function extractServingG(str){
     for(const re of SERVING_PATTERNS){const m=str.match(re);if(m)return parseFloat(m[1]);}
