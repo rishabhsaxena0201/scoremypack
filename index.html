@@ -286,6 +286,9 @@ main{flex:1;padding:10px 16px;gap:8px;overflow:hidden;position:relative}
 .crop-btn{flex:1;padding:12px;border-radius:12px;border:none;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .2s}
 .crop-btn-skip{background:var(--surface2);color:var(--muted)}
 .crop-btn-confirm{background:var(--accent);color:#fff}
+
+.low-quality-warning{display:flex;align-items:flex-start;gap:7px;padding:10px 16px;background:rgba(238,129,0,.08);border-bottom:1px solid rgba(238,129,0,.2);font-size:12px;color:#EE8100;line-height:1.6}
+.low-quality-warning svg{flex-shrink:0;margin-top:1px;color:#EE8100}
 </style>
 </head>
 <body>
@@ -410,6 +413,10 @@ main{flex:1;padding:10px 16px;gap:8px;overflow:hidden;position:relative}
       <div class="review-accuracy-note">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         These values were read from your image. Give them a quick check before scoring.
+      </div>
+      <div class="low-quality-warning" id="low-quality-warning" style="display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span>Low confidence read. For better results: lay the pack flat, shoot straight down, fill the frame with just the nutrition table.</span>
       </div>
       <!-- Editable portion size -->
       <div class="portion-row">
@@ -1185,6 +1192,7 @@ function onServingInput(){
 
 // ── Build review form ─────────────────────────────────────────────
 function showReviewCard(nutrition){
+  const ocrScore = nutrition._ocrScore || 0;
   _portionG = nutrition.serving_size_g || 100;
 
   // OCR confidence badge
@@ -1193,6 +1201,9 @@ function showReviewCard(nutrition){
   const badge = document.getElementById('ocr-conf');
   badge.textContent = `${pct}% OCR`;
   badge.className = 'ocr-conf '+(pct>=80?'conf-hi':pct>=50?'conf-md':'conf-lo');
+  // Show low quality warning if OCR score is poor
+  const lqw = document.getElementById('low-quality-warning');
+  if(lqw) lqw.style.display = (ocrScore < 15 || pct < 40) ? 'flex' : 'none';
 
   // Portion size field
   const portionEl = document.getElementById('portion-size');
